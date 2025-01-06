@@ -40,12 +40,45 @@ defmodule Pharkdown.LoaderTest do
     exp = """
     Un premier paragraphe.
 
-    Un simple paragraphe
+    Un simple paragraphe.
 
     Un paragraphe après.
-
     """
     assert res == exp
   end
 
+  test "insertion d'un bloc de code dans un texte" do
+    txt = """
+    Un premier paragraphe.
+
+    load_as_code(simple.rb)
+
+    Le paragraphe après le code.
+    """
+
+    res = Loader.load_external_contents(txt, @options)
+
+    exp = """
+    Un premier paragraphe.
+
+    ~~~ruby
+    <span class=\"text-sm italic\">(source : ./test/fixtures/textes/simple.rb)</span>
+    
+    module MonModule
+
+    end
+    ~~~
+
+    Le paragraphe après le code.
+    """
+
+    assert res == exp
+  end
+
+  test "on ne touche pas le texte qui ne contient pas de load" do
+    txt = "Un texte sans load.\n\n\n\n"
+    res = Loader.load_external_contents(txt, @options)
+    exp = "Un texte sans load.\n\n"
+    assert res == exp
+  end
 end

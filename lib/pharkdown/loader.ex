@@ -8,7 +8,7 @@ defmodule Pharkdown.Loader do
 
   @regex_load ~r/load\((.*)\)/U
   @regex_load_as_code ~r/load_as_code\((.*)\)/U
-
+  @regex_poly_returns ~r/\n\n\n+/; @remp_poly_returns "\n\n"
 
   @doc """
   = main =
@@ -18,9 +18,23 @@ defmodule Pharkdown.Loader do
     code
     |> load_external_textes(options)
     |> load_external_codes(options)
+    |> String.replace(@regex_poly_returns, @remp_poly_returns)
   end
 
   defp load_external_textes(code, options) do
+    case code =~ ~r/load\(/ do
+      false -> code
+      true  -> _load_external_textes(code, options)
+    end
+  end
+  defp load_external_codes(code, options) do
+    case code =~ ~r/load_as_code\(/ do
+      false -> code
+      true  -> _load_external_codes(code, options)
+    end
+  end
+
+  defp _load_external_textes(code, options) do
     Regex.replace(@regex_load, code, fn _tout, pseudo_path -> 
       case resolve_pseudo_path(pseudo_path, options) do
         {:ok, path}     -> 
@@ -31,7 +45,7 @@ defmodule Pharkdown.Loader do
     end)
   end
 
-  def load_external_codes(code, options) do
+  defp _load_external_codes(code, options) do
     Regex.replace(@regex_load_as_code, code, fn _tout, pseudo_path ->
       case resolve_pseudo_path(pseudo_path, options) do
         {:ok, path}     -> 
@@ -41,6 +55,7 @@ defmodule Pharkdown.Loader do
       end
     end)
   end
+  defp load_external_codes(code, _options), do: code
 
 
   defp replace_as_code(path, options) do
