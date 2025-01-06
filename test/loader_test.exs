@@ -28,4 +28,24 @@ defmodule Pharkdown.LoaderTest do
     assert res == exp
   end
 
+  test "insertion d'un texte dans un autre texte existant" do
+    txt = """
+    Un premier paragraphe.
+
+    load(simple.phad)
+
+    Un paragraphe après.
+    """
+    res = Loader.load_external_contents(txt, @options)
+    exp = """
+    Un premier paragraphe.
+
+    Un simple paragraphe
+
+    Un paragraphe après.
+
+    """
+    assert res == exp
+  end
+
 end
