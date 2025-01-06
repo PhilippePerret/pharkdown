@@ -81,4 +81,16 @@ defmodule Pharkdown.LoaderTest do
     exp = "Un texte sans load.\n\n"
     assert res == exp
   end
+
+  test "load fonctionne en donnant un path absolu" do
+    abspath = Path.absname("./test/fixtures/textes/simple.phad")
+    txt = "Un texte avec path absolu.\n\nload(#{abspath})\n"
+    res = Loader.load_external_contents(txt, @options)
+    exp = """
+    Un texte avec path absolu.
+
+    Un simple paragraphe.
+    """
+    assert res == exp
+  end
 end
