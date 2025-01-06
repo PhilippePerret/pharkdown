@@ -7,14 +7,17 @@ defmodule Pharkdown.Engine do
 
   alias Pharkdown.Parser
   alias Pharkdown.Formater
+  alias Pharkdown.Loader
 
   @impl true
   def compile(path, options) do
 
-    content = File.read!(path)
+    content = 
+      File.read!(path)
+      |> Loader.load_external_contents(options)
 
     quote do
-      unquote(Parser.parse(content, options))
+      unquote(Parser.parse(content, options) |> Formater.formate(options))
     end
   end
 
