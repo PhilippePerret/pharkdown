@@ -6,6 +6,12 @@
 
 En plus de ça, *pharkdown* opère tout un tas de transformation qui permettent de simplifier la vie et d'assurer un rendu parfait (notamment en gérant, de façon unique, les espaces insécables qui ne sont jamais parfaitement rendu).
 
+### Compile time et Runtime
+
+Une autre grande différence, dans l'utilisation avec Phoenix, est que *Pharkdown* fonctionne en deux temps. Il peut fonctionner en direct (avec la méthode `render/3` de Phoenix) et il peut fonctionner en préparant à la compilation un document `.html.heex` qui sera ensuite utiliser avec `render/3`.
+
+Le second fonctionnement est le fonctionnement "normal".
+
 ## Utilisation
 
 ### Transformations automatiques

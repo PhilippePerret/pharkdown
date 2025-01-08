@@ -17,7 +17,7 @@ defmodule Pharkdown.Engine do
       |> Loader.load_external_contents(options)
 
     quote do
-      unquote(Parser.parse(content, options) |> Formater.formate(options))
+      unquote(content |> Parser.parse(options) |> Formater.formate(options))
     end
   end
 
