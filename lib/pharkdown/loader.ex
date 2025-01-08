@@ -55,10 +55,10 @@ defmodule Pharkdown.Loader do
       end
     end)
   end
-  defp load_external_codes(code, _options), do: code
+  defp _load_external_codes(code, _options), do: code
 
 
-  defp replace_as_code(path, options) do
+  defp replace_as_code(path, _options) do
     extension = path |> String.split(".") |> Enum.fetch!(-1)
     langage = 
       case extension do

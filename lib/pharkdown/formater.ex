@@ -25,7 +25,7 @@ defmodule Pharkdown.Formater do
     |> Enum.join("\n")
   end
 
-  def formate(type, data, _options) do
+  def formate(type, _data, _options) do
     raise "Je ne sais pas traiter le type #{type}"
   end
 

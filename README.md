@@ -1,6 +1,6 @@
 # Pharkdown
 
-**TODO: Add description**
+Pharkdown est un engin pour transformer les pages `.phad` en pages pour Phoenix. Il fonctionne coomme l'extension `Markdown` dont il est inspiré mais produit de nombreuses autres choses.
 
 ## Installation
 
