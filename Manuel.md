@@ -1,6 +1,32 @@
+# Pharkdown
+
+## Présentation
+
+**Pharkdown** est un *engin de rendu* pour [Phoenix/Elixir](https://elixir-lang.org/docs.html) qui permet de travailler ses vues à partir d'un formatage simple, à l'image de [markdown](https://fr.wikipedia.org/wiki/Markdown) mais offrant beaucoup plus de possibilités. On peut notamment créer des *environnements* personnalisés pour traiter un bloc de texte d'une manière personnalisées.
+
+En plus de ça, *pharkdown* opère tout un tas de transformation qui permettent de simplifier la vie et d'assurer un rendu parfait (notamment en gérant, de façon unique, les espaces insécables qui ne sont jamais parfaitement rendu).
+
+## Utilisation
+
+### Transformations automatiques
+
+#### Espaces insécables
+
+Malgré tous les efforts des navigateurs, ils ne parviennent pas à traiter correctement les insécables et on se retrouve souvent avec des ":" ou autres "!" tout seuls à la ligne. Il n'en va pas de même avec *Pharkdown* qui les gèrent parfaitement.
+
+### Marquages spéciaux
+
+#### Exposant avec `^`
+
+### Substitutions
+
+#### Guillemets droits
+
+#### 
+
 ### Les lignes
 
-Contrairement à Markdown, on ne sépare par les paragraphes par des doubles-retour chariot. Ainsi, le texte :
+Contrairement à Markdown — et c'est une des grandes différences —, on ne sépare par les paragraphes par des doubles-retours chariot. Ainsi, le texte :
 
 ~~~
 Mon paragraphe
