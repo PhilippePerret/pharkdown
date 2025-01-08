@@ -24,9 +24,30 @@ avec un autre à la ligne
 
 … seront considéré comme des textes dans le même paragraphe mais auquel on ajoutera un `<br />` pour forcer le passage à la ligne.
 
+## Les environnements
+
+Il existe des *environnements* par défaut qui permettent de mettre en forme le texte d'une certaine manière. C'est le cas par exemple pour du code ou un aspect document pour du texte.
+
+Un environnement se trouve entre les marques :
+
+~~~
+environnement/
+...
+/environnement
+~~~
+
+Ces environnements sont :
+
+~~~
+document (ou 'doc')
+blockcode (ou 'code' ou 'bcode')
+~~~
+
+À l'avenir, l'utilisateur pourra définir le traitement de ses propres environnements.
+
 ### Listes
 
-On indique les liste à l'aide de `*` ou de `-` suivis d'une espace. Les degrés différents s'indiquent en multipliant ces marques.
+Comme en markdonw, on indique les liste à l'aide de `*` ou de `-` suivis d'une espace. Les degrés différents s'indiquent en multipliant ces marques.
 
 ~~~
 * Item 1

@@ -7,7 +7,8 @@ defmodule Pharkdown.Parser do
   ]
   @environment_substitution %{
     "doc"   => "document",
-    "bcode" => "blockcode"
+    "bcode" => "blockcode",
+    "code"  => "code",
   }
 
   @regex_balise_token ~r/^TOKEN_([0-9]+)_TOKEN$/
@@ -19,7 +20,10 @@ defmodule Pharkdown.Parser do
   def parse(string, options \\ []) when is_binary(string) do
     string
     |> String.replace("\r", "")
-    |> String.replace("\n\n+", "\n")
+    # |> String.replace("\n\n+", "\n")
+          # NON. Il ne faut surtout pas supprimer ici les doubles 
+          # chariots car ils servent par exemple à délimiter les
+          # fin de liste.
     |> tokenize(options)
   end
 
