@@ -149,8 +149,8 @@ defmodule Pharkdown.Formatter do
 
   # --- Guillemets et apostrophes ---
 
-  iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\".", [])
-  "Il a dit « ça » et aussi « cela »."
+  iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\" mais \\"encore cela\\".", [])
+  "Il a dit <nowrap>« ça »</nowrap> et aussi <nowrap>« cela »</nowrap> mais <nowrap>« encore</nowrap> <nowrap>cela »</nowrap>."
 
   iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\".", [smarties: false])
   "Il a dit \\"ça\\" et aussi \\"cela\\"."
@@ -161,8 +161,24 @@ defmodule Pharkdown.Formatter do
   iex> Pharkdown.Formatter.formate("Il l'est pour toujours aujourd'hui", [smarties: false])
   "Il l'est pour toujours aujourd'hui"
 
-  # on ne doit pas les toucher dans les codes
-  todo
+  # Conserver dans les codes
+  iex> Pharkdown.Formatter.formate("Il l'est pour \\"tou <% \\"un texte\\" %>jours\\" aujourd'hui", [smarties: true])
+  "Il l’est pour <nowrap>« tou</nowrap> <nowrap><% \\"un texte\\" %>jours »</nowrap> aujourd’hui"
+  
+  # --- Pour empêcher les retours à la ligne de ponctuations même 
+        avec insécables ---
+
+  iex> Pharkdown.Formatter.formate("bravo ! bravo ! et encore ; qui le demande ? et ça aussi : et aussi là !?!", [])
+  "<nowrap>bravo !</nowrap> <nowrap>bravo !</nowrap> et <nowrap>encore ;</nowrap> qui le <nowrap>demande ?</nowrap> et ça <nowrap>aussi :</nowrap> et aussi <nowrap>là !?!</nowrap>"
+
+  # tirets (différentes tailles ici)
+  iex> Pharkdown.Formatter.formate(" et — il faut dire — que — oui — mais — pas toujours — et — ça — et — encore ça — mais — toujours pas ça —", [])
+  " et <nowrap>— il</nowrap> faut <nowrap>dire —</nowrap> que <nowrap>— oui —</nowrap> mais <nowrap>— pas</nowrap> <nowrap>toujours —</nowrap> et <nowrap>— ça —</nowrap> et <nowrap>— encore</nowrap> <nowrap>ça —</nowrap> mais <nowrap>— toujours</nowrap> pas <nowrap>ça —</nowrap>"
+
+  # guillemets 
+  iex> Pharkdown.Formatter.formate("« un » et « deux mots » et « encore trois mots » sans « insécable » et « ça aussi » et « encore ça aussi ».", [])
+  "<nowrap>« un »</nowrap> et <nowrap>« deux</nowrap> <nowrap>mots »</nowrap> et <nowrap>« encore</nowrap> trois <nowrap>mots »</nowrap> sans <nowrap>« insécable »</nowrap> et <nowrap>« ça</nowrap> <nowrap>aussi »</nowrap> et <nowrap>« encore</nowrap> ça <nowrap>aussi »</nowrap>."
+
   """
   def juste_pour_definir_le_doc_de_la_suivante, do: nil
 
@@ -178,6 +194,7 @@ defmodule Pharkdown.Formatter do
     texte
     # |> IO.inspect(label: "\nTEXTE POUR TRANSFORMATIONS")
     |> formate_smart_guillemets(options)
+    |> glue_insecables(options)
     |> formate_simples_styles(options)
     |> formate_href_links(options)
     |> formate_exposants(options)
@@ -193,10 +210,43 @@ defmodule Pharkdown.Formatter do
     if options[:smarties] == false do
       string
     else
-      String.replace(string, @regex_guillemets, @remp_guillemets)
+      string
+      |> String.replace(@regex_guillemets, @remp_guillemets)
       |> String.replace(@regex_apostrophes, @remp_apostrophes)
     end
   end
+
+  @regex_insecable_guils ~r/(«)[  ](.+)[  ](»)/Uu
+  @regex_insecable_tirets ~r/([—–])[  ](.+)[  ]([—–])/Uu
+  @regex_insecable_ponct ~r/\b([^ ]+)[  ]([!?:;]+?)/Uu   ; @remp_insecable_ponct "<nowrap>\\1 \\2</nowrap>"
+  defp glue_insecables(string, options) do
+    string
+    |> string_replace(@regex_insecable_guils, options)
+    |> string_replace(@regex_insecable_tirets, options)
+    |> String.replace(@regex_insecable_ponct, @remp_insecable_ponct)
+  end
+  
+  defp string_replace(string, regex, _options) do
+    Regex.replace(regex, string, fn tout, tbefore, content, tafter ->
+      founds = String.split(content, " ")
+      if Enum.count(founds) > 1 do
+        # Contenu de plusieurs mot
+        {first, founds} = List.pop_at(founds, 0)
+        {last, founds}  = List.pop_at(founds, -1)
+        reste = 
+          if Enum.any?(founds) do
+            " " <> Enum.join(founds, " ") <> " "
+          else
+            " "
+          end
+        "<nowrap>#{tbefore} #{first}</nowrap>#{reste}<nowrap>#{last} #{tafter}</nowrap>"
+      else
+        # Contenu d'un seul mot
+        "<nowrap>#{tbefore} #{content} #{tafter}</nowrap>"
+      end
+    end)
+  end
+
 
   @regex_gras_italic ~r/\*\*\*(.+)\*\*\*/U  ; @remp_gras_italic "<strong><em>\\1</em></strong>"
   @regex_graisse ~r/\*\*(.+)\*\*/U          ; @remp_graisse "<strong>\\1</strong>"
@@ -277,7 +327,7 @@ defmodule Pharkdown.Formatter do
     capture_codes_besides(%{data_besides| regex: @regex_code_hex_et_composants}, options)
   end
 
-  defp capture_codes_besides(data_besides, options) do
+  defp capture_codes_besides(data_besides, _options) do
     if String.match?(data_besides.texte, data_besides.regex) do
       Regex.scan(data_besides.regex, data_besides.texte)
       |> Enum.with_index(data_besides.index + 1)

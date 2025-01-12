@@ -53,11 +53,19 @@ Comme avec markdown, on peut utiliser le formatage `[titre](href)` pour créer d
 => "<a href="path/to" class="css1 css2" style="margin-top:12rem;">titre</a>
 ~~~~
 
-
-
 #### Guillemets droits
 
-#### 
+Les guillemets droits (") sont automatiquement remplacés par des chevrons et les apostrophes droits par des apostrophes courbes, sauf si l'option `[smarties: false]` est utilisées.
+
+Noter que cela n'affecte en rien les codes mais seulement les textes (sauf dans les codes, où il faut penser à les utiliser directement).
+
+#### Retours à la ligne
+
+On peut forcer un simple retour à la ligne (`<br />` en HTML) en utilisant `\n`. Par exemple :
+
+~~~
+Le texte avec un \n Retour à la ligne
+~~~
 
 ### Les lignes
 
