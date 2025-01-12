@@ -21,4 +21,8 @@ defmodule Pharkdown.Engine do
     end
   end
 
+  # Crée le fichier +html_path+ à partir du fichier +phad_path+
+  def compile_file(phad_path, html_path, phad_name) do
+    File.write!(html_path, compile(phad_path, []))
+  end
 end #/module Pharkdown.Engine
