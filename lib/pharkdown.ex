@@ -3,6 +3,19 @@ defmodule Pharkdown do
   Documentation for `Pharkdown`.
   """
 
+  # Pour savoir si le programme a été changé
+  @last_pharkdown_modify_datetime  ["engine.ex", "formater.ex", "loader.ex","parser.ex"]
+    |> Enum.reduce(%{datetime: ~U[2025-01-12 06:36:00.003Z]}, fn name, accu ->
+      datetime = File.stat!(Path.join([".","lib","pharkdown", name]))
+      accu = 
+        if datetime > accu.datetime do
+          %{ accu | datetime: datetime }
+        else accu end 
+    end)
+    |> Map.get(:datetime)
+    |> IO.inspect(label: "\n@last_pharkdown_modify_datetime")
+  
+
   defp phad_files_in_folder(template_folder) do
     File.ls!(template_folder)
     |> Enum.filter(fn name -> Path.extname(name) == ".phad" end)
@@ -27,6 +40,7 @@ defmodule Pharkdown do
     |> Enum.reduce(%{new: [], mod: [], oks: []}, fn dfile, acc ->
       cond do
       !File.exists?(dfile[:html]) -> %{ acc | new: acc.new ++ [ dfile ] }
+      (File.stat!(dfile[:html]).mtime < @last_pharkdown_modify_datetime) -> %{ acc | mod: acc.mod ++ [ dfile ] }
       (File.stat!(dfile[:html]).mtime < File.stat!(dfile[:phad]).mtime) -> %{ acc | mod: acc.mod ++ [ dfile ] }
       true -> %{acc | oks: acc.oks ++ [ dfile ] }
       end

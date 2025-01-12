@@ -25,6 +25,22 @@ defmodule Pharkdown.Formater do
     |> Enum.join("\n")
   end
 
+  @doc """
+  Formatage de liste définie par :
+    * item 1
+    * item 2
+    ** item 2.1
+    etc.
+
+  ## Examples
+
+    iex> Pharkdown.Formater.formate(:list, [type: :regular, first: 1, content: [[content: "Item 1", level: 1]]], [])
+    "<ul><li>Item 1</li></ul>"
+
+    iex> Pharkdown.Formater.formate(:list, [type: :ordered, first: 1, content: [[content: "Item 1", level: 1]]], [])
+    "<ol><li>Item 1</li></ol>"
+
+  """
   def formate(:list, data, _options) do
     tag = data[:type] == :regular && "ul" || "ol"
     accu =
@@ -37,7 +53,7 @@ defmodule Pharkdown.Formater do
       end)
     # Peut-être fermer le niveau courant
     accu = change_level_in_list(accu, 1 - accu.current_level, tag)
-    |> IO.inspect(label: "Content de liste") 
+    # |> IO.inspect(label: "Content de liste") 
     "<#{tag}>" <> accu.content <> "</#{tag}>"
   end
 
@@ -56,6 +72,7 @@ defmodule Pharkdown.Formater do
     })
   end
 
+  # Formatage quelconque, non défini
   def formate(type, _data, _options) do
     raise "Je ne sais pas encore traiter le type #{type}"
   end

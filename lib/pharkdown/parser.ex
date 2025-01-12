@@ -25,7 +25,7 @@ defmodule Pharkdown.Parser do
           # chariots car ils servent par exemple à délimiter les
           # fin de liste.
     |> tokenize(options)
-    |> IO.inspect(label: "\n<- parse avec")
+    # |> IO.inspect(label: "\n<- parse avec")
   end
 
   @doc """
