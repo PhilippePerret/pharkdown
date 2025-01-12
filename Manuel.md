@@ -24,6 +24,21 @@ Malgré tous les efforts des navigateurs, ils ne parviennent pas à traiter corr
 
 #### Exposant avec `^`
 
+Pour placer les 2^e ou 1^er, ou les notes^12, on utilise le circonflexe avant l'élément à mettre en exposant. Par exemple :
+
+~~~
+Le 1^er et la 2^e comme la 1^re et le 2^e.
+~~~
+
+Pharkdown procède ici à des corrections automatiques (sauf si les options sont réglées à `correct: false`) dont la liste est la suivante :
+
+~~~
+1^ere => "ere" fautif remplacé par "re"
+e après X, V, I ou un nombre comme dans XIXe ou 54e => e en exposant
+~~~
+
+Pour que ces changements ne s'effectuent pas, mettre les options à `correct: false`.
+
 ### Substitutions
 
 ### Liens `[...](...)`

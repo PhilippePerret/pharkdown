@@ -111,7 +111,8 @@ defmodule Pharkdown.Formater do
   iex> Pharkdown.Formater.formate("[Mon autre lien](/vers/un/autre|class=exergue, style=font-size: 12pt)", [])
   "<a href=\\"/vers/un/autre\\" class=\\"exergue\\" style=\\"font-size: 12pt\\">Mon autre lien</a>"
 
-  # Exposants
+  # -- Exposants ---
+
   iex> Pharkdown.Formater.formate("1^er 1^re 1^ere 2^e 3^eme 4^ème 1^res 1^eres note^1 autre note^123a", [])
   "1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 2<sup>e</sup> 3<sup>e</sup> 4<sup>e</sup> 1<sup>res</sup> 1<sup>res</sup> note<sup>1</sup> autre note<sup>123a</sup>"
 
@@ -122,6 +123,14 @@ defmodule Pharkdown.Formater do
   # sans correction 
   iex> Pharkdown.Formater.formate("1^ere", [{:correct, false}])
   "1<sup>ere</sup>"
+
+  # automatique
+  iex> Pharkdown.Formater.formate("XVe XIXe Xeme IXème 2e 1er 1re 1ere 1ère 456e", [])
+  "XV<sup>e</sup> XIX<sup>e</sup> X<sup>e</sup> IX<sup>e</sup> 2<sup>e</sup> 1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 1<sup>re</sup> 456<sup>e</sup>"
+
+  # sans correction
+  iex> Pharkdown.Formater.formate("XVe XIXe 1er 456e", [{:correct, false}])
+  "XVe XIXe 1er 456e"
 
   """
   def juste_pour_definir_la_suivante, do: nil
@@ -175,8 +184,10 @@ defmodule Pharkdown.Formater do
   end
 
   @regex_exposants ~r/\^(.+)\b/Uu
-  @table_remplacement_exposants %{"ere" => "re", "eres" => "res", "eme" => "e", "ème" => "e"}
+  @regex_exposants_implicites ~r/([XCVIM0-9])(ère|ere|ème|eme|eres|er|re|e)/Uu
+  @table_remplacement_exposants %{"ere" => "re", "ère" => "re", "eres" => "res", "eme" => "e", "ème" => "e"}
   defp formate_exposants(string, options) do
+    new_string =
     Regex.replace(@regex_exposants, string, fn _tout, found ->
       found = if options[:correct] == false do
         found
@@ -184,6 +195,15 @@ defmodule Pharkdown.Formater do
         @table_remplacement_exposants[found] || found
       end
       "<sup>#{found}</sup>"
+    end)
+
+    Regex.replace(@regex_exposants_implicites, new_string, fn tout, avant, expose ->
+      if options[:correct] == false do
+        tout
+      else
+        expose = @table_remplacement_exposants[expose] || expose
+        "#{avant}<sup>#{expose}</sup>"
+      end
     end)
   end
 
