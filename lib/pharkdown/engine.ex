@@ -6,7 +6,7 @@ defmodule Pharkdown.Engine do
   @behaviour Phoenix.Template.Engine
 
   alias Pharkdown.Parser
-  alias Pharkdown.Formater
+  alias Pharkdown.Formatter
   alias Pharkdown.Loader
 
   @doc """

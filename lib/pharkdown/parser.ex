@@ -1,6 +1,6 @@
 defmodule Pharkdown.Parser do
 
-  # alias Pharkdown.Formater
+  # alias Pharkdown.Formatter
 
   @known_environments [
     "document", "doc", "blockcode", "bcode"

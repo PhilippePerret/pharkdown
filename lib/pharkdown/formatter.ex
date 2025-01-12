@@ -1,4 +1,4 @@
-defmodule Pharkdown.Formater do
+defmodule Pharkdown.Formatter do
 
   @doc """
   Fonction principale qui reçoit le découpage de la fonction Pharkdown.Parser.parse et
@@ -33,10 +33,10 @@ defmodule Pharkdown.Formater do
 
   ## Examples
 
-    iex> Pharkdown.Formater.formate(:list, [type: :regular, first: 1, content: [[content: "Item 1", level: 1]]], [])
+    iex> Pharkdown.Formatter.formate(:list, [type: :regular, first: 1, content: [[content: "Item 1", level: 1]]], [])
     "<ul><li>Item 1</li></ul>"
 
-    iex> Pharkdown.Formater.formate(:list, [type: :ordered, first: 1, content: [[content: "Item 1", level: 1]]], [])
+    iex> Pharkdown.Formatter.formate(:list, [type: :ordered, first: 1, content: [[content: "Item 1", level: 1]]], [])
     "<ol><li>Item 1</li></ol>"
 
   """
@@ -70,75 +70,92 @@ defmodule Pharkdown.Formater do
   **gras** ainsi que les [lien](vers/quelque/chose)
 
   # Italiques
-  iex> Pharkdown.Formater.formate("*italic* et *autre chose*", [])
+  iex> Pharkdown.Formatter.formate("*italic* et *autre chose*", [])
   "<em>italic</em> et <em>autre chose</em>"
   # avec parasite
-  iex>  Pharkdown.Formater.formate("*ita\\\\*lic* et *autre chose*", [])
+  iex>  Pharkdown.Formatter.formate("*ita\\\\*lic* et *autre chose*", [])
   "<em>ita*lic</em> et <em>autre chose</em>"
 
-
   # Gras
-  iex> Pharkdown.Formater.formate("**gras** et **autre gras**", [])
+  iex> Pharkdown.Formatter.formate("**gras** et **autre gras**", [])
   "<strong>gras</strong> et <strong>autre gras</strong>"
   
   # avec parasite
-  iex> Pharkdown.Formater.formate("**gras** et **autre \\\\*\\\\*gras**", [])
+  iex> Pharkdown.Formatter.formate("**gras** et **autre \\\\*\\\\*gras**", [])
   "<strong>gras</strong> et <strong>autre **gras</strong>"
 
   # Gras italique
-  iex> Pharkdown.Formater.formate("***gras et italique***", [])
+  iex> Pharkdown.Formatter.formate("***gras et italique***", [])
   "<strong><em>gras et italique</em></strong>"
 
   # Souligné
-  iex>  Pharkdown.Formater.formate("__souligné__ et __très souligné__", [])
+  iex>  Pharkdown.Formatter.formate("__souligné__ et __très souligné__", [])
   "<u>souligné</u> et <u>très souligné</u>"
   
   # avec parasite
-  iex>  Pharkdown.Formater.formate("__souligné\\\\___ et __très\\\\_\\\\_souligné__", [])
+  iex>  Pharkdown.Formatter.formate("__souligné\\\\___ et __très\\\\_\\\\_souligné__", [])
   "<u>souligné_</u> et <u>très__souligné</u>"
 
-  iex> Pharkdown.Formater.formate("[Mon lien](/vers/un/path)", [])
+  iex> Pharkdown.Formatter.formate("[Mon lien](/vers/un/path)", [])
   "<a href=\\"/vers/un/path\\">Mon lien</a>"
   
   # Avec parasite
-  iex> Pharkdown.Formater.formate("[Mon\\\\]\\\\(lien](/vers/un/path)", [])
+  iex> Pharkdown.Formatter.formate("[Mon\\\\]\\\\(lien](/vers/un/path)", [])
   "<a href=\\"/vers/un/path\\">Mon](lien</a>"
   
   # Double
-  iex> Pharkdown.Formater.formate("[Mon lien](/vers/un/path) et [autre lien](path/to)", [])
+  iex> Pharkdown.Formatter.formate("[Mon lien](/vers/un/path) et [autre lien](path/to)", [])
   "<a href=\\"/vers/un/path\\">Mon lien</a> et <a href=\\"path/to\\">autre lien</a>"
 
-  iex> Pharkdown.Formater.formate("[Mon autre lien](/vers/un/autre|class=exergue, style=font-size: 12pt)", [])
+  iex> Pharkdown.Formatter.formate("[Mon autre lien](/vers/un/autre|class=exergue, style=font-size: 12pt)", [])
   "<a href=\\"/vers/un/autre\\" class=\\"exergue\\" style=\\"font-size: 12pt\\">Mon autre lien</a>"
 
   # -- Exposants ---
 
-  iex> Pharkdown.Formater.formate("1^er 1^re 1^ere 2^e 3^eme 4^ème 1^res 1^eres note^1 autre note^123a", [])
+  iex> Pharkdown.Formatter.formate("1^er 1^re 1^ere 2^e 3^eme 4^ème 1^res 1^eres note^1 autre note^123a", [])
   "1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 2<sup>e</sup> 3<sup>e</sup> 4<sup>e</sup> 1<sup>res</sup> 1<sup>res</sup> note<sup>1</sup> autre note<sup>123a</sup>"
 
   # parasite
-  iex> Pharkdown.Formater.formate("1\\\\^er et 2\\\\^e", [])
+  iex> Pharkdown.Formatter.formate("1\\\\^er et 2\\\\^e", [])
   "1^er et 2^e"
 
   # sans correction 
-  iex> Pharkdown.Formater.formate("1^ere", [{:correct, false}])
+  iex> Pharkdown.Formatter.formate("1^ere", [{:correct, false}])
   "1<sup>ere</sup>"
 
   # automatique
-  iex> Pharkdown.Formater.formate("XVe XIXe Xeme IXème 2e 1er 1re 1ere 1ère 456e", [])
+  iex> Pharkdown.Formatter.formate("XVe XIXe Xeme IXème 2e 1er 1re 1ere 1ère 456e", [])
   "XV<sup>e</sup> XIX<sup>e</sup> X<sup>e</sup> IX<sup>e</sup> 2<sup>e</sup> 1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 1<sup>re</sup> 456<sup>e</sup>"
 
   # sans correction
-  iex> Pharkdown.Formater.formate("XVe XIXe 1er 456e", [{:correct, false}])
+  iex> Pharkdown.Formatter.formate("XVe XIXe 1er 456e", [{:correct, false}])
   "XVe XIXe 1er 456e"
 
+  # --- Conservation des code Heex et composants ---
+
+  iex> Pharkdown.Formatter.formate("<% *code non touché* %>", [])
+  "<% *code non touché* %>"
+
+  iex> Pharkdown.Formatter.formate("<.composant *composant non touché* />", [])
+  "<.composant *composant non touché* />"
+
+  # - code sur plusieurs lignes -
+  iex> Pharkdown.Formatter.formate("<%= if *condition* do %>\\n<p>Ce paragraphe __isolé__</p>\\n<% end %>", [])
+  "<%= if *condition* do %>\\n<p>Ce paragraphe <u>isolé</u></p>\\n<% end %>"
+
+  # plusieurs (greedy)
+  iex> Pharkdown.Formatter.formate("<% eval(4 + @value) %> et <% eval(2 * @value) %>", [])
+  "<% eval(4 + @value) %> et <% eval(2 * @value) %>"
+
   """
-  def juste_pour_definir_la_suivante, do: nil
+  def juste_pour_definir_le_doc_de_la_suivante, do: nil
 
   def formate(texte, options) when is_binary(texte) do
     # On commence par mettre de côté tous les caractères échappés
     # IO.inspect(texte, label: "\nTexte avant déslashiation")
-    %{texte: texte, table: slahed_signs} = capture_slashed_caracters(texte, options)
+    %{texte: texte, table: codes_beside} = 
+    capture_slashed_caracters(texte, options)
+    |> capture_hex_and_composants(options)
 
     # IO.inspect(slahed_signs, label: "\nTable Slahed_signs")
 
@@ -149,7 +166,7 @@ defmodule Pharkdown.Formater do
     |> formate_exposants(options)
     # --- /Transformations ---
     # On remet tous les caractères échappé
-    |> replace_slashed_caracters(slahed_signs, options)
+    |> replace_codes_beside(codes_beside, options)
   end
 
   @regex_gras_italic ~r/\*\*\*(.+)\*\*\*/U  ; @remp_gras_italic "<strong><em>\\1</em></strong>"
@@ -184,7 +201,9 @@ defmodule Pharkdown.Formater do
   end
 
   @regex_exposants ~r/\^(.+)\b/Uu
-  @regex_exposants_implicites ~r/([XCVIM0-9])(ère|ere|ème|eme|eres|er|re|e)/Uu
+  @regex_exposants_implicites1 ~r/([XV])(ème|eme|e)/Uu
+  # Pas "C" qui traiterait "Ce" ni "M" qui traiterait "Me"
+  @regex_exposants_implicites2 ~r/([0-9])(ère|ere|ème|eme|eres|er|re|e)/Uu
   @table_remplacement_exposants %{"ere" => "re", "ère" => "re", "eres" => "res", "eme" => "e", "ème" => "e"}
   defp formate_exposants(string, options) do
     new_string =
@@ -196,8 +215,9 @@ defmodule Pharkdown.Formater do
       end
       "<sup>#{found}</sup>"
     end)
-
-    Regex.replace(@regex_exposants_implicites, new_string, fn tout, avant, expose ->
+  
+  new_string =
+    Regex.replace(@regex_exposants_implicites1, new_string, fn tout, avant, expose ->
       if options[:correct] == false do
         tout
       else
@@ -205,23 +225,54 @@ defmodule Pharkdown.Formater do
         "#{avant}<sup>#{expose}</sup>"
       end
     end)
+
+    Regex.replace(@regex_exposants_implicites2, new_string, fn tout, avant, expose ->
+    if options[:correct] == false do
+      tout
+    else
+      expose = @table_remplacement_exposants[expose] || expose
+      "#{avant}<sup>#{expose}</sup>"
+    end
+  end)
   end
 
-  defp capture_slashed_caracters(string, _options) do
-    Regex.scan(~r/\\(.)/, string)
-    |> Enum.with_index()
-    |> Enum.reduce(%{texte: string, table: []}, fn {found, index}, accu ->
-      [tout, sign] = found
-      remp = "SLHSGN#{index}NGSHLS"
-      Map.merge(accu, %{
-        table: accu.table ++ [sign],
-        texte: String.replace(accu.texte, tout, remp, global: false)
-      })
-    end)
+  @regex_slashed_signs ~r/\\(.)/
+  defp capture_slashed_caracters(string, options) do
+    data_besides = %{texte: string, table: [], index: -1, regex: @regex_slashed_signs}
+    capture_codes_besides(data_besides, options)
   end
 
-  defp replace_slashed_caracters(texte, [], _options), do: texte
-  defp replace_slashed_caracters(texte, slashed_signs, _options) do
+  @regex_code_hex_et_composants ~r/(<[%.](?:.+)[\/%]>)/U
+  defp capture_hex_and_composants(data_besides, options) do
+    capture_codes_besides(%{data_besides| regex: @regex_code_hex_et_composants}, options)
+  end
+
+  defp capture_codes_besides(data_besides, options) do
+    if String.match?(data_besides.texte, data_besides.regex) do
+      Regex.scan(data_besides.regex, data_besides.texte)
+      |> Enum.with_index(data_besides.index + 1)
+      |> Enum.reduce(data_besides, fn {found, index}, accu ->
+        [tout, sign] = found
+        remp = "SLHSGN#{index}NGSHLS"
+        Map.merge(accu, %{
+          table: accu.table ++ [sign],
+          texte: String.replace(accu.texte, tout, remp, global: false),
+          index: index
+        })
+      end)
+    else
+      data_besides
+    end
+  end
+
+
+  @doc """
+  Fonction qui, à la fin du formatage du texte, remet les codes mis
+  de côté, à commencer par les caractères échappés, les code hex et
+  les composants HEX
+  """
+  defp replace_codes_beside(texte, [], _options), do: texte
+  defp replace_codes_beside(texte, slashed_signs, _options) do
     slashed_signs
     |> Enum.with_index()
     |> Enum.reduce(texte, fn {sign, index}, accu ->
