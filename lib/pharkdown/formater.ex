@@ -10,7 +10,6 @@ defmodule Pharkdown.Formater do
     |> Enum.join("\n")
   end
 
-
   def formate(:paragraph, data, _options) do
     # TODO Ajouter les classes, etc.
     "<p>" <> data[:content] <> "</p>"
@@ -57,7 +56,138 @@ defmodule Pharkdown.Formater do
     "<#{tag}>" <> accu.content <> "</#{tag}>"
   end
 
-  defp change_level_in_list(accu, 0, tag), do: accu
+  # Formatage quelconque, non défini
+  def formate(type, _data, _options) do
+    raise "Je ne sais pas encore traiter le type #{type}"
+  end
+
+
+
+  @doc """
+  Fonction principale qui reçoit le texte produit par la fonction 
+  précédente et le finalise.
+  C'est ici par exemple que sont traités les *italic* et autres 
+  **gras** ainsi que les [lien](vers/quelque/chose)
+
+  # Italiques
+  iex> Pharkdown.Formater.formate("*italic* et *autre chose*", [])
+  "<em>italic</em> et <em>autre chose</em>"
+  # avec parasite
+  iex>  Pharkdown.Formater.formate("*ita\\\\*lic* et *autre chose*", [])
+  "<em>ita*lic</em> et <em>autre chose</em>"
+
+
+  # Gras
+  iex> Pharkdown.Formater.formate("**gras** et **autre gras**", [])
+  "<strong>gras</strong> et <strong>autre gras</strong>"
+  
+  # avec parasite
+  iex> Pharkdown.Formater.formate("**gras** et **autre \\\\*\\\\*gras**", [])
+  "<strong>gras</strong> et <strong>autre **gras</strong>"
+
+  # Gras italique
+  iex> Pharkdown.Formater.formate("***gras et italique***", [])
+  "<strong><em>gras et italique</em></strong>"
+
+  # Souligné
+  iex>  Pharkdown.Formater.formate("__souligné__ et __très souligné__", [])
+  "<u>souligné</u> et <u>très souligné</u>"
+  
+  # avec parasite
+  iex>  Pharkdown.Formater.formate("__souligné\\\\___ et __très\\\\_\\\\_souligné__", [])
+  "<u>souligné_</u> et <u>très__souligné</u>"
+
+  iex> Pharkdown.Formater.formate("[Mon lien](/vers/un/path)", [])
+  "<a href=\\"/vers/un/path\\">Mon lien</a>"
+  
+  # Avec parasite
+  iex> Pharkdown.Formater.formate("[Mon\\\\]\\\\(lien](/vers/un/path)", [])
+  "<a href=\\"/vers/un/path\\">Mon](lien</a>"
+  
+  # Double
+  iex> Pharkdown.Formater.formate("[Mon lien](/vers/un/path) et [autre lien](path/to)", [])
+  "<a href=\\"/vers/un/path\\">Mon lien</a> et <a href=\\"path/to\\">autre lien</a>"
+
+  iex> Pharkdown.Formater.formate("[Mon autre lien](/vers/un/autre|class=exergue, style=font-size: 12pt)", [])
+  "<a href=\\"/vers/un/autre\\" class=\\"exergue\\" style=\\"font-size: 12pt\\">Mon autre lien</a>"
+
+  """
+  def juste_pour_definir_la_suivante, do: nil
+
+  def formate(texte, options) when is_binary(texte) do
+    # On commence par mettre de côté tous les caractères échappés
+    # IO.inspect(texte, label: "\nTexte avant déslashiation")
+    %{texte: texte, table: slahed_signs} = capture_slashed_caracters(texte, options)
+
+    # IO.inspect(slahed_signs, label: "\nTable Slahed_signs")
+
+    texte
+    # |> IO.inspect(label: "\nTEXTE POUR TRANSFORMATIONS")
+    |> formate_simples_styles(options)
+    |> formate_href_links(options)
+    # |> formate_exposants(options)
+    # --- /Transformations ---
+    # On remet tous les caractères échappé
+    |> replace_slashed_caracters(slahed_signs, options)
+  end
+
+  @regex_gras_italic ~r/\*\*\*(.+)\*\*\*/U  ; @remp_gras_italic "<strong><em>\\1</em></strong>"
+  @regex_graisse ~r/\*\*(.+)\*\*/U          ; @remp_graisse "<strong>\\1</strong>"
+  @regex_italics ~r/\*([^ \t].+)\*/U        ; @remp_italics "<em>\\1</em>"
+  @regex_underscore ~r/__(.+)__/U           ; @remp_underscore "<u>\\1</u>"
+  defp formate_simples_styles(string, _options) do
+    string
+    |> String.replace(@regex_gras_italic, @remp_gras_italic)
+    |> String.replace(@regex_graisse, @remp_graisse)
+    |> String.replace(@regex_italics, @remp_italics)
+    |> String.replace(@regex_underscore, @remp_underscore)
+  end
+
+  @regex_links ~r/\[(?<title>.+)\]\((?<href>.+)(?:\|(?<params>.+))?\)/U
+  defp formate_href_links(string, _options) do
+    Regex.replace(@regex_links, string, fn _, title, href, params ->
+      attributes =
+        if params == "" do
+          ""
+        else
+          params
+          |> String.split(",") 
+          |> Enum.map(fn i -> String.trim(i) end)
+          |> Enum.map(fn i -> [attribute, value] = String.split(i, "=") end)
+          |> Enum.map(fn [attr, val] -> "#{attr}=\"#{val}\"" end)
+          |> (fn liste -> " " <> Enum.join(liste, " ") end).()
+        end
+    
+      "<a href=\"#{href}\"#{attributes}>#{title}</a>"
+    end)
+  end
+
+  defp capture_slashed_caracters(string, _options) do
+    Regex.scan(~r/\\(.)/, string)
+    |> Enum.with_index()
+    |> Enum.reduce(%{texte: string, table: []}, fn {found, index}, accu ->
+      [tout, sign] = found
+      remp = "SLHSGN#{index}NGSHLS"
+      Map.merge(accu, %{
+        table: accu.table ++ [sign],
+        texte: String.replace(accu.texte, tout, remp, global: false)
+      })
+    end)
+  end
+
+  defp replace_slashed_caracters(texte, [], _options), do: texte
+  defp replace_slashed_caracters(texte, slashed_signs, _options) do
+    slashed_signs
+    |> Enum.with_index()
+    |> Enum.reduce(texte, fn {sign, index}, accu ->
+      remp = "SLHSGN#{index}NGSHLS"
+      String.replace(accu, remp, sign)
+    end)
+  end
+
+  # ------------ SOUS MÉTHODES ---------------
+
+  defp change_level_in_list(accu, 0, _tag), do: accu
 
   defp change_level_in_list(accu, diff, tag) when diff > 0 do
     Map.merge(accu, %{
@@ -72,9 +202,5 @@ defmodule Pharkdown.Formater do
     })
   end
 
-  # Formatage quelconque, non défini
-  def formate(type, _data, _options) do
-    raise "Je ne sais pas encore traiter le type #{type}"
-  end
 
 end

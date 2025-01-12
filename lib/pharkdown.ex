@@ -5,12 +5,11 @@ defmodule Pharkdown do
 
   # Pour savoir si le programme a été changé
   @last_pharkdown_modify_datetime  ["engine.ex", "formater.ex", "loader.ex","parser.ex"]
-    |> Enum.reduce(%{datetime: ~U[2025-01-12 06:36:00.003Z]}, fn name, accu ->
-      datetime = File.stat!(Path.join([".","lib","pharkdown", name]))
-      accu = 
-        if datetime > accu.datetime do
-          %{ accu | datetime: datetime }
-        else accu end 
+    |> Enum.reduce(%{datetime: NaiveDateTime.new!(~D[2025-01-12], ~T[06:36:00])}, fn name, accu ->
+      datetime = File.stat!(Path.join([".","lib","pharkdown", name])).mtime
+      {{year, month, day}, {hour, minute, second}} = datetime
+      datetime = NaiveDateTime.new!(year, month, day, hour, minute, second)
+      NaiveDateTime.after?(datetime, accu.datetime) && %{ accu | datetime: datetime } || accu
     end)
     |> Map.get(:datetime)
     |> IO.inspect(label: "\n@last_pharkdown_modify_datetime")
@@ -40,8 +39,8 @@ defmodule Pharkdown do
     |> Enum.reduce(%{new: [], mod: [], oks: []}, fn dfile, acc ->
       cond do
       !File.exists?(dfile[:html]) -> %{ acc | new: acc.new ++ [ dfile ] }
-      (File.stat!(dfile[:html]).mtime < @last_pharkdown_modify_datetime) -> %{ acc | mod: acc.mod ++ [ dfile ] }
-      (File.stat!(dfile[:html]).mtime < File.stat!(dfile[:phad]).mtime) -> %{ acc | mod: acc.mod ++ [ dfile ] }
+      DateTime.before?(File.stat!(dfile[:html]).mtime, @last_pharkdown_modify_datetime) -> %{ acc | mod: acc.mod ++ [ dfile ] }
+      DateTime.before?(File.stat!(dfile[:html]).mtime, File.stat!(dfile[:phad]).mtime)  -> %{ acc | mod: acc.mod ++ [ dfile ] }
       true -> %{acc | oks: acc.oks ++ [ dfile ] }
       end
     end)

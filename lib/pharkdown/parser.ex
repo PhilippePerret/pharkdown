@@ -16,6 +16,13 @@ defmodule Pharkdown.Parser do
 
   @doc """
   Parse le code +string+
+
+
+  NOTES
+    Bien comprendre que ça n'est pas ici, par exemple, qu'on va 
+    traiter les italiques, gras et autres styles. On en traitera pas
+    non plus les liens [mon lien](mon href) etc. qui se feront seu-
+    lement sur le texte complet dans un second temps.
   """
   def parse(string, options \\ []) when is_binary(string) do
     string
@@ -76,6 +83,26 @@ defmodule Pharkdown.Parser do
         ]
       }
     ]
+
+    iex> Pharkdown.Parser.tokenize("5- Premier\\n- Deuxième\\n-- Troisième")
+    [
+      {
+        :list, 
+        [
+          index: 1, type: :ordered, first: 5, 
+          content: [
+            [content: "Premier", level: 1], 
+            [content: "Deuxième", level: 1], 
+            [content: "Troisième", level: 2]
+          ]
+        ]
+      }
+    ]
+
+    # --- Liens ---
+    # Non, c'est fait sur tout le texte à la fin.
+
+    # --- Mélange ---
 
     iex> Pharkdown.Parser.tokenize("Tout premier paragraphe\\n# Titre \\n* item 1\\n* item 2\\n\\n## Autre titre\\nParagraphe")
     [
