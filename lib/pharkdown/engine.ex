@@ -25,7 +25,7 @@ defmodule Pharkdown.Engine do
 
     quote do
       #                                                                        cf. N001
-      unquote(content |> Parser.parse(options) |> Formater.formate(options) |> Formater.formate(options))
+      unquote(content |> Parser.parse(options) |> Formatter.formate(options) |> Formatter.formate(options))
     end
   end
 

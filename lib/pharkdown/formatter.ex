@@ -147,6 +147,22 @@ defmodule Pharkdown.Formatter do
   iex> Pharkdown.Formatter.formate("<% eval(4 + @value) %> et <% eval(2 * @value) %>", [])
   "<% eval(4 + @value) %> et <% eval(2 * @value) %>"
 
+  # --- Guillemets et apostrophes ---
+
+  iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\".", [])
+  "Il a dit « ça » et aussi « cela »."
+
+  iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\".", [smarties: false])
+  "Il a dit \\"ça\\" et aussi \\"cela\\"."
+
+  iex> Pharkdown.Formatter.formate("Il l'est pour toujours aujourd'hui", [])
+  "Il l’est pour toujours aujourd’hui"
+
+  iex> Pharkdown.Formatter.formate("Il l'est pour toujours aujourd'hui", [smarties: false])
+  "Il l'est pour toujours aujourd'hui"
+
+  # on ne doit pas les toucher dans les codes
+  todo
   """
   def juste_pour_definir_le_doc_de_la_suivante, do: nil
 
@@ -161,12 +177,25 @@ defmodule Pharkdown.Formatter do
 
     texte
     # |> IO.inspect(label: "\nTEXTE POUR TRANSFORMATIONS")
+    |> formate_smart_guillemets(options)
     |> formate_simples_styles(options)
     |> formate_href_links(options)
     |> formate_exposants(options)
     # --- /Transformations ---
     # On remet tous les caractères échappé
     |> replace_codes_beside(codes_beside, options)
+  end
+
+  # Traitement des guillemets droits
+  @regex_guillemets ~r/"(.+)"/U   ; @remp_guillemets "« \\1 »"
+  @regex_apostrophes ~r/'/U       ; @remp_apostrophes "’"
+  defp formate_smart_guillemets(string, options) do
+    if options[:smarties] == false do
+      string
+    else
+      String.replace(string, @regex_guillemets, @remp_guillemets)
+      |> String.replace(@regex_apostrophes, @remp_apostrophes)
+    end
   end
 
   @regex_gras_italic ~r/\*\*\*(.+)\*\*\*/U  ; @remp_gras_italic "<strong><em>\\1</em></strong>"
@@ -216,15 +245,15 @@ defmodule Pharkdown.Formatter do
       "<sup>#{found}</sup>"
     end)
   
-  new_string =
-    Regex.replace(@regex_exposants_implicites1, new_string, fn tout, avant, expose ->
-      if options[:correct] == false do
-        tout
-      else
-        expose = @table_remplacement_exposants[expose] || expose
-        "#{avant}<sup>#{expose}</sup>"
-      end
-    end)
+    new_string =
+      Regex.replace(@regex_exposants_implicites1, new_string, fn tout, avant, expose ->
+        if options[:correct] == false do
+          tout
+        else
+          expose = @table_remplacement_exposants[expose] || expose
+          "#{avant}<sup>#{expose}</sup>"
+        end
+      end)
 
     Regex.replace(@regex_exposants_implicites2, new_string, fn tout, avant, expose ->
     if options[:correct] == false do
@@ -235,6 +264,7 @@ defmodule Pharkdown.Formatter do
     end
   end)
   end
+
 
   @regex_slashed_signs ~r/\\(.)/
   defp capture_slashed_caracters(string, options) do
@@ -264,13 +294,10 @@ defmodule Pharkdown.Formatter do
       data_besides
     end
   end
-
-
-  @doc """
-  Fonction qui, à la fin du formatage du texte, remet les codes mis
-  de côté, à commencer par les caractères échappés, les code hex et
-  les composants HEX
-  """
+  
+  # Fonction qui, à la fin du formatage du texte, remet les codes mis
+  # de côté, à commencer par les caractères échappés, les code hex et
+  # les composants HEX
   defp replace_codes_beside(texte, [], _options), do: texte
   defp replace_codes_beside(texte, slashed_signs, _options) do
     slashed_signs
