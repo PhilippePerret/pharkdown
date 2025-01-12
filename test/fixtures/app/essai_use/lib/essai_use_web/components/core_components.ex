@@ -17,7 +17,8 @@ defmodule EssaiUseWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import EssaiUseWeb.Gettext
+  # import EssaiUseWeb.Gettext
+  use Gettext, backend: EssaiUse.Gettext
 
   @doc """
   Renders a modal.

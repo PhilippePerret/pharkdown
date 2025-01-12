@@ -7,10 +7,6 @@
 # General application configuration
 import Config
 
-config :essai_use,
-  ecto_repos: [EssaiUse.Repo],
-  generators: [timestamp_type: :utc_datetime]
-
 # Configures the endpoint
 config :essai_use, EssaiUseWeb.Endpoint,
   url: [host: "localhost"],
@@ -22,14 +18,6 @@ config :essai_use, EssaiUseWeb.Endpoint,
   pubsub_server: EssaiUse.PubSub,
   live_view: [signing_salt: "lb3+oKtV"]
 
-# Configures the mailer
-#
-# By default it uses the "Local" adapter which stores the emails
-# locally. You can see the emails in your browser, at "/dev/mailbox".
-#
-# For production it's recommended to configure a different adapter
-# at the `config/runtime.exs`.
-config :essai_use, EssaiUse.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,

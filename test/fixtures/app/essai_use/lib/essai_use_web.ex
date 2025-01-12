@@ -43,7 +43,8 @@ defmodule EssaiUseWeb do
         layouts: [html: EssaiUseWeb.Layouts]
 
       import Plug.Conn
-      import EssaiUseWeb.Gettext
+      # import EssaiUseWeb.Gettext
+      use Gettext, backend: EssaiUse.Gettext
 
       unquote(verified_routes())
     end
@@ -85,7 +86,8 @@ defmodule EssaiUseWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import EssaiUseWeb.CoreComponents
-      import EssaiUseWeb.Gettext
+      # import EssaiUseWeb.Gettext
+      use Gettext, backend: EssaiUse.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

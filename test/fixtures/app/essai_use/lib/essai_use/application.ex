@@ -9,7 +9,6 @@ defmodule EssaiUse.Application do
   def start(_type, _args) do
     children = [
       EssaiUseWeb.Telemetry,
-      EssaiUse.Repo,
       {DNSCluster, query: Application.get_env(:essai_use, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: EssaiUse.PubSub},
       # Start the Finch HTTP client for sending emails

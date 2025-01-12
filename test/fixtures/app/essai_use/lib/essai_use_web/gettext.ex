@@ -20,5 +20,7 @@ defmodule EssaiUseWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :essai_use
+  # use Gettext, otp_app: :essai_use
+  use Gettext.Backend, otp_app: :essai_use
+
 end
