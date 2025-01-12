@@ -111,6 +111,18 @@ defmodule Pharkdown.Formater do
   iex> Pharkdown.Formater.formate("[Mon autre lien](/vers/un/autre|class=exergue, style=font-size: 12pt)", [])
   "<a href=\\"/vers/un/autre\\" class=\\"exergue\\" style=\\"font-size: 12pt\\">Mon autre lien</a>"
 
+  # Exposants
+  iex> Pharkdown.Formater.formate("1^er 1^re 1^ere 2^e 3^eme 4^ème 1^res 1^eres note^1 autre note^123a", [])
+  "1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 2<sup>e</sup> 3<sup>e</sup> 4<sup>e</sup> 1<sup>res</sup> 1<sup>res</sup> note<sup>1</sup> autre note<sup>123a</sup>"
+
+  # parasite
+  iex> Pharkdown.Formater.formate("1\\\\^er et 2\\\\^e", [])
+  "1^er et 2^e"
+
+  # sans correction 
+  iex> Pharkdown.Formater.formate("1^ere", [{:correct, false}])
+  "1<sup>ere</sup>"
+
   """
   def juste_pour_definir_la_suivante, do: nil
 
@@ -125,7 +137,7 @@ defmodule Pharkdown.Formater do
     # |> IO.inspect(label: "\nTEXTE POUR TRANSFORMATIONS")
     |> formate_simples_styles(options)
     |> formate_href_links(options)
-    # |> formate_exposants(options)
+    |> formate_exposants(options)
     # --- /Transformations ---
     # On remet tous les caractères échappé
     |> replace_slashed_caracters(slahed_signs, options)
@@ -153,12 +165,25 @@ defmodule Pharkdown.Formater do
           params
           |> String.split(",") 
           |> Enum.map(fn i -> String.trim(i) end)
-          |> Enum.map(fn i -> [attribute, value] = String.split(i, "=") end)
+          |> Enum.map(fn i -> String.split(i, "=") end)
           |> Enum.map(fn [attr, val] -> "#{attr}=\"#{val}\"" end)
           |> (fn liste -> " " <> Enum.join(liste, " ") end).()
         end
     
       "<a href=\"#{String.trim(href)}\"#{attributes}>#{title}</a>"
+    end)
+  end
+
+  @regex_exposants ~r/\^(.+)\b/Uu
+  @table_remplacement_exposants %{"ere" => "re", "eres" => "res", "eme" => "e", "ème" => "e"}
+  defp formate_exposants(string, options) do
+    Regex.replace(@regex_exposants, string, fn _tout, found ->
+      found = if options[:correct] == false do
+        found
+      else
+        @table_remplacement_exposants[found] || found
+      end
+      "<sup>#{found}</sup>"
     end)
   end
 
