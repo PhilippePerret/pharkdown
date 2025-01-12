@@ -26,6 +26,19 @@ Malgré tous les efforts des navigateurs, ils ne parviennent pas à traiter corr
 
 ### Substitutions
 
+### Liens `[...](...)`
+
+Comme avec markdown, on peut utiliser le formatage `[titre](href)` pour créer des liens. Mais on peut aller plus loin en ajoutant après `href` des valeurs d'attributs à ajouter à la balise `<a>`. Tous les attributs doivent être séparés par des virgules (virgule-espace) et chaque élément doit être une paire `attribut=value` qui sera transformée en `attribut="value"` (ne pas mettre de guillemets, donc).
+
+~~~~
+[titre](path/to/ca) # => "<a href="path/to/ca">titre</a>"
+
+[titre](path/to | class=css1 css2, style=margin-top:12rem;)
+=> "<a href="path/to" class="css1 css2" style="margin-top:12rem;">titre</a>
+~~~~
+
+
+
 #### Guillemets droits
 
 #### 

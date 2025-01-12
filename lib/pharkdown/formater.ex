@@ -158,7 +158,7 @@ defmodule Pharkdown.Formater do
           |> (fn liste -> " " <> Enum.join(liste, " ") end).()
         end
     
-      "<a href=\"#{href}\"#{attributes}>#{title}</a>"
+      "<a href=\"#{String.trim(href)}\"#{attributes}>#{title}</a>"
     end)
   end
 
