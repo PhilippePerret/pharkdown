@@ -33,11 +33,12 @@ Le 1^er et la 2^e comme la 1^re et le 2^e.
 Pharkdown procède ici à des corrections automatiques (sauf si les options sont réglées à `correct: false`) dont la liste est la suivante :
 
 ~~~
+2^ème => "ème" fautif remplacé par "e"
 1^ere => "ere" fautif remplacé par "re"
 e après X, V, I ou un nombre comme dans XIXe ou 54e => e en exposant
 ~~~
 
-Pour que ces changements ne s'effectuent pas, mettre les options à `correct: false`.
+Pour que ces corrections ne s'effectuent pas, mettre les options à `correct: false`. Seul le circonflexe sera traité en tant que marque d'exposant. Le texte `1\^ère` fautif restera `1<sup>ère</sup>` (par exemple dans un cours d'orthographe).
 
 ### Substitutions
 
