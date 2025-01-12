@@ -64,120 +64,130 @@ defmodule Pharkdown.Formatter do
 
 
   @doc """
-  Fonction principale qui reçoit le texte produit par la fonction 
-  précédente et le finalise.
-  C'est ici par exemple que sont traités les *italic* et autres 
-  **gras** ainsi que les [lien](vers/quelque/chose)
+  FONCTION PRINCIPALE 
+  qui reçoit le texte produit par la fonction précédente et le 
+  finalise. C'est ici par exemple que sont traités les *italic* et
+  autres **gras** ainsi que les [lien](vers/quelque/chose)
 
-  # Italiques
-  iex> Pharkdown.Formatter.formate("*italic* et *autre chose*", [])
-  "<em>italic</em> et <em>autre chose</em>"
-  # avec parasite
-  iex>  Pharkdown.Formatter.formate("*ita\\\\*lic* et *autre chose*", [])
-  "<em>ita*lic</em> et <em>autre chose</em>"
+  ## Examples
 
-  # Gras
-  iex> Pharkdown.Formatter.formate("**gras** et **autre gras**", [])
-  "<strong>gras</strong> et <strong>autre gras</strong>"
-  
-  # avec parasite
-  iex> Pharkdown.Formatter.formate("**gras** et **autre \\\\*\\\\*gras**", [])
-  "<strong>gras</strong> et <strong>autre **gras</strong>"
+    // --- Conservation des échappés ---
 
-  # Gras italique
-  iex> Pharkdown.Formatter.formate("***gras et italique***", [])
-  "<strong><em>gras et italique</em></strong>"
+    iex> Pharkdown.Formatter.formate("\\\—un texte\\\— un \\\\*un texte\\\\* et \\\\n pour voir.", [])
+    "—un texte— un *un texte* et<br />pour voir."
 
-  # Souligné
-  iex>  Pharkdown.Formatter.formate("__souligné__ et __très souligné__", [])
-  "<u>souligné</u> et <u>très souligné</u>"
-  
-  # avec parasite
-  iex>  Pharkdown.Formatter.formate("__souligné\\\\___ et __très\\\\_\\\\_souligné__", [])
-  "<u>souligné_</u> et <u>très__souligné</u>"
+    // --- Stylisation générale ---
 
-  iex> Pharkdown.Formatter.formate("[Mon lien](/vers/un/path)", [])
-  "<a href=\\"/vers/un/path\\">Mon lien</a>"
-  
-  # Avec parasite
-  iex> Pharkdown.Formatter.formate("[Mon\\\\]\\\\(lien](/vers/un/path)", [])
-  "<a href=\\"/vers/un/path\\">Mon](lien</a>"
-  
-  # Double
-  iex> Pharkdown.Formatter.formate("[Mon lien](/vers/un/path) et [autre lien](path/to)", [])
-  "<a href=\\"/vers/un/path\\">Mon lien</a> et <a href=\\"path/to\\">autre lien</a>"
+    // Italiques
+    iex> Pharkdown.Formatter.formate("*italic* et *autre chose*", [])
+    "<em>italic</em> et <em>autre chose</em>"
 
-  iex> Pharkdown.Formatter.formate("[Mon autre lien](/vers/un/autre|class=exergue, style=font-size: 12pt)", [])
-  "<a href=\\"/vers/un/autre\\" class=\\"exergue\\" style=\\"font-size: 12pt\\">Mon autre lien</a>"
+    // avec parasite
+    iex>  Pharkdown.Formatter.formate("*ita\\\\*lic* et *autre chose*", [])
+    "<em>ita*lic</em> et <em>autre chose</em>"
 
-  # -- Exposants ---
+    // Gras
+    iex> Pharkdown.Formatter.formate("**gras** et **autre gras**", [])
+    "<strong>gras</strong> et <strong>autre gras</strong>"
+    
+    // avec parasite
+    iex> Pharkdown.Formatter.formate("**gras** et **autre \\\\*\\\\*gras**", [])
+    "<strong>gras</strong> et <strong>autre **gras</strong>"
 
-  iex> Pharkdown.Formatter.formate("1^er 1^re 1^ere 2^e 3^eme 4^ème 1^res 1^eres note^1 autre note^123a", [])
-  "1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 2<sup>e</sup> 3<sup>e</sup> 4<sup>e</sup> 1<sup>res</sup> 1<sup>res</sup> note<sup>1</sup> autre note<sup>123a</sup>"
+    // Gras italique
+    iex> Pharkdown.Formatter.formate("***gras et italique***", [])
+    "<strong><em>gras et italique</em></strong>"
 
-  # parasite
-  iex> Pharkdown.Formatter.formate("1\\\\^er et 2\\\\^e", [])
-  "1^er et 2^e"
+    // Souligné
+    iex>  Pharkdown.Formatter.formate("__souligné__ et __très souligné__", [])
+    "<u>souligné</u> et <u>très souligné</u>"
+    
+    // avec parasite
+    iex>  Pharkdown.Formatter.formate("__souligné\\\\___ et __très\\\\_\\\\_souligné__", [])
+    "<u>souligné_</u> et <u>très__souligné</u>"
 
-  # sans correction 
-  iex> Pharkdown.Formatter.formate("1^ere", [{:correct, false}])
-  "1<sup>ere</sup>"
+    iex> Pharkdown.Formatter.formate("[Mon lien](/vers/un/path)", [])
+    "<a href=\\"/vers/un/path\\">Mon lien</a>"
+    
+    // Avec parasite
+    iex> Pharkdown.Formatter.formate("[Mon\\\\]\\\\(lien](/vers/un/path)", [])
+    "<a href=\\"/vers/un/path\\">Mon](lien</a>"
+    
+    // Double
+    iex> Pharkdown.Formatter.formate("[Mon lien](/vers/un/path) et [autre lien](path/to)", [])
+    "<a href=\\"/vers/un/path\\">Mon lien</a> et <a href=\\"path/to\\">autre lien</a>"
 
-  # automatique
-  iex> Pharkdown.Formatter.formate("XVe XIXe Xeme IXème 2e 1er 1re 1ere 1ère 456e", [])
-  "XV<sup>e</sup> XIX<sup>e</sup> X<sup>e</sup> IX<sup>e</sup> 2<sup>e</sup> 1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 1<sup>re</sup> 456<sup>e</sup>"
+    iex> Pharkdown.Formatter.formate("[Mon autre lien](/vers/un/autre|class=exergue, style=font-size: 12pt)", [])
+    "<a href=\\"/vers/un/autre\\" class=\\"exergue\\" style=\\"font-size: 12pt\\">Mon autre lien</a>"
 
-  # sans correction
-  iex> Pharkdown.Formatter.formate("XVe XIXe 1er 456e", [{:correct, false}])
-  "XVe XIXe 1er 456e"
+    // -- Exposants ---
 
-  # --- Conservation des code Heex et composants ---
+    iex> Pharkdown.Formatter.formate("1^er 1^re 1^ere 2^e 3^eme 4^ème 1^res 1^eres note^1 autre note^123a", [])
+    "1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 2<sup>e</sup> 3<sup>e</sup> 4<sup>e</sup> 1<sup>res</sup> 1<sup>res</sup> note<sup>1</sup> autre note<sup>123a</sup>"
 
-  iex> Pharkdown.Formatter.formate("<% *code non touché* %>", [])
-  "<% *code non touché* %>"
+    // parasite
+    iex> Pharkdown.Formatter.formate("1\\\\^er et 2\\\\^e", [])
+    "1^er et 2^e"
 
-  iex> Pharkdown.Formatter.formate("<.composant *composant non touché* />", [])
-  "<.composant *composant non touché* />"
+    // sans correction 
+    iex> Pharkdown.Formatter.formate("1^ere", [{:correct, false}])
+    "1<sup>ere</sup>"
 
-  # - code sur plusieurs lignes -
-  iex> Pharkdown.Formatter.formate("<%= if *condition* do %>\\n<p>Ce paragraphe __isolé__</p>\\n<% end %>", [])
-  "<%= if *condition* do %>\\n<p>Ce paragraphe <u>isolé</u></p>\\n<% end %>"
+    // automatique
+    iex> Pharkdown.Formatter.formate("XVe XIXe Xeme IXème 2e 1er 1re 1ere 1ère 456e", [])
+    "XV<sup>e</sup> XIX<sup>e</sup> X<sup>e</sup> IX<sup>e</sup> 2<sup>e</sup> 1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 1<sup>re</sup> 456<sup>e</sup>"
 
-  # plusieurs (greedy)
-  iex> Pharkdown.Formatter.formate("<% eval(4 + @value) %> et <% eval(2 * @value) %>", [])
-  "<% eval(4 + @value) %> et <% eval(2 * @value) %>"
+    // sans correction
+    iex> Pharkdown.Formatter.formate("XVe XIXe 1er 456e", [{:correct, false}])
+    "XVe XIXe 1er 456e"
 
-  # --- Guillemets et apostrophes ---
+    // --- Conservation des code Heex et composants ---
 
-  iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\" mais \\"encore cela\\".", [])
-  "Il a dit <nowrap>« ça »</nowrap> et aussi <nowrap>« cela »</nowrap> mais <nowrap>« encore</nowrap> <nowrap>cela »</nowrap>."
+    iex> Pharkdown.Formatter.formate("<% *code non touché* %>", [])
+    "<% *code non touché* %>"
 
-  iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\".", [smarties: false])
-  "Il a dit \\"ça\\" et aussi \\"cela\\"."
+    iex> Pharkdown.Formatter.formate("<.composant *composant non touché* />", [])
+    "<.composant *composant non touché* />"
 
-  iex> Pharkdown.Formatter.formate("Il l'est pour toujours aujourd'hui", [])
-  "Il l’est pour toujours aujourd’hui"
+    // - code sur plusieurs lignes -
+    iex> Pharkdown.Formatter.formate("<%= if *condition* do %>\\n<p>Ce paragraphe __isolé__</p>\\n<% end %>", [])
+    "<%= if *condition* do %>\\n<p>Ce paragraphe <u>isolé</u></p>\\n<% end %>"
 
-  iex> Pharkdown.Formatter.formate("Il l'est pour toujours aujourd'hui", [smarties: false])
-  "Il l'est pour toujours aujourd'hui"
+    // plusieurs (greedy)
+    iex> Pharkdown.Formatter.formate("<% eval(4 + @value) %> et <% eval(2 * @value) %>", [])
+    "<% eval(4 + @value) %> et <% eval(2 * @value) %>"
 
-  # Conserver dans les codes
-  iex> Pharkdown.Formatter.formate("Il l'est pour \\"tou <% \\"un texte\\" %>jours\\" aujourd'hui", [smarties: true])
-  "Il l’est pour <nowrap>« tou</nowrap> <nowrap><% \\"un texte\\" %>jours »</nowrap> aujourd’hui"
-  
-  # --- Pour empêcher les retours à la ligne de ponctuations même 
-        avec insécables ---
+    // --- Guillemets et apostrophes ---
 
-  iex> Pharkdown.Formatter.formate("bravo ! bravo ! et encore ; qui le demande ? et ça aussi : et aussi là !?!", [])
-  "<nowrap>bravo !</nowrap> <nowrap>bravo !</nowrap> et <nowrap>encore ;</nowrap> qui le <nowrap>demande ?</nowrap> et ça <nowrap>aussi :</nowrap> et aussi <nowrap>là !?!</nowrap>"
+    iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\" mais \\"encore cela\\".", [])
+    "Il a dit <nowrap>« ça »</nowrap> et aussi <nowrap>« cela »</nowrap> mais <nowrap>« encore</nowrap> <nowrap>cela »</nowrap>."
 
-  # tirets (différentes tailles ici)
-  iex> Pharkdown.Formatter.formate(" et — il faut dire — que — oui — mais — pas toujours — et — ça — et — encore ça — mais — toujours pas ça —", [])
-  " et <nowrap>— il</nowrap> faut <nowrap>dire —</nowrap> que <nowrap>— oui —</nowrap> mais <nowrap>— pas</nowrap> <nowrap>toujours —</nowrap> et <nowrap>— ça —</nowrap> et <nowrap>— encore</nowrap> <nowrap>ça —</nowrap> mais <nowrap>— toujours</nowrap> pas <nowrap>ça —</nowrap>"
+    iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\".", [smarties: false])
+    "Il a dit \\"ça\\" et aussi \\"cela\\"."
 
-  # guillemets 
-  iex> Pharkdown.Formatter.formate("« un » et « deux mots » et « encore trois mots » sans « insécable » et « ça aussi » et « encore ça aussi ».", [])
-  "<nowrap>« un »</nowrap> et <nowrap>« deux</nowrap> <nowrap>mots »</nowrap> et <nowrap>« encore</nowrap> trois <nowrap>mots »</nowrap> sans <nowrap>« insécable »</nowrap> et <nowrap>« ça</nowrap> <nowrap>aussi »</nowrap> et <nowrap>« encore</nowrap> ça <nowrap>aussi »</nowrap>."
+    iex> Pharkdown.Formatter.formate("Il l'est pour toujours aujourd'hui", [])
+    "Il l’est pour toujours aujourd’hui"
+
+    iex> Pharkdown.Formatter.formate("Il l'est pour toujours aujourd'hui", [smarties: false])
+    "Il l'est pour toujours aujourd'hui"
+
+    // Conserver dans les codes
+    iex> Pharkdown.Formatter.formate("Il l'est pour \\"tou <% \\"un texte\\" %>jours\\" aujourd'hui", [smarties: true])
+    "Il l’est pour <nowrap>« tou</nowrap> <nowrap><% \\"un texte\\" %>jours »</nowrap> aujourd’hui"
+    
+    // --- Pour empêcher les retours à la ligne de ponctuations même 
+          avec insécables ---
+
+    iex> Pharkdown.Formatter.formate("bravo ! bravo ! et encore ; qui le demande ? et ça aussi : et aussi là !?!", [])
+    "<nowrap>bravo !</nowrap> <nowrap>bravo !</nowrap> et <nowrap>encore ;</nowrap> qui le <nowrap>demande ?</nowrap> et ça <nowrap>aussi :</nowrap> et aussi <nowrap>là !?!</nowrap>"
+
+    // tirets (différentes tailles ici)
+    iex> Pharkdown.Formatter.formate(" et — il faut dire — que — oui — mais — pas toujours — et — ça — et — encore ça — mais — toujours pas ça —", [])
+    " et <nowrap>— il</nowrap> faut <nowrap>dire —</nowrap> que <nowrap>— oui —</nowrap> mais <nowrap>— pas</nowrap> <nowrap>toujours —</nowrap> et <nowrap>— ça —</nowrap> et <nowrap>— encore</nowrap> <nowrap>ça —</nowrap> mais <nowrap>— toujours</nowrap> pas <nowrap>ça —</nowrap>"
+
+    // guillemets 
+    iex> Pharkdown.Formatter.formate("« un » et « deux mots » et « encore trois mots » sans « insécable » et « ça aussi » et « encore ça aussi ».", [])
+    "<nowrap>« un »</nowrap> et <nowrap>« deux</nowrap> <nowrap>mots »</nowrap> et <nowrap>« encore</nowrap> trois <nowrap>mots »</nowrap> sans <nowrap>« insécable »</nowrap> et <nowrap>« ça</nowrap> <nowrap>aussi »</nowrap> et <nowrap>« encore</nowrap> ça <nowrap>aussi »</nowrap>."
 
   """
   def juste_pour_definir_le_doc_de_la_suivante, do: nil
@@ -199,8 +209,9 @@ defmodule Pharkdown.Formatter do
     |> formate_href_links(options)
     |> formate_exposants(options)
     # --- /Transformations ---
-    # On remet tous les caractères échappé
+    # On remet tous les caractères échappés
     |> replace_codes_beside(codes_beside, options)
+    |> very_last_correction(options)
   end
 
   # Traitement des guillemets droits
@@ -227,24 +238,28 @@ defmodule Pharkdown.Formatter do
   end
   
   defp string_replace(string, regex, _options) do
-    Regex.replace(regex, string, fn tout, tbefore, content, tafter ->
-      founds = String.split(content, " ")
-      if Enum.count(founds) > 1 do
-        # Contenu de plusieurs mot
-        {first, founds} = List.pop_at(founds, 0)
-        {last, founds}  = List.pop_at(founds, -1)
-        reste = 
-          if Enum.any?(founds) do
-            " " <> Enum.join(founds, " ") <> " "
-          else
-            " "
-          end
-        "<nowrap>#{tbefore} #{first}</nowrap>#{reste}<nowrap>#{last} #{tafter}</nowrap>"
-      else
-        # Contenu d'un seul mot
-        "<nowrap>#{tbefore} #{content} #{tafter}</nowrap>"
-      end
-    end)
+    if String.match?(string, regex) do
+      Regex.replace(regex, string, fn _tout, tbefore, content, tafter ->
+        founds = String.split(content, " ")
+        if Enum.count(founds) > 1 do
+          # Contenu de plusieurs mot
+          {first, founds} = List.pop_at(founds, 0)
+          {last, founds}  = List.pop_at(founds, -1)
+          reste = 
+            if Enum.any?(founds) do
+              " " <> Enum.join(founds, " ") <> " "
+            else
+              " "
+            end
+          "<nowrap>#{tbefore} #{first}</nowrap>#{reste}<nowrap>#{last} #{tafter}</nowrap>"
+        else
+          # Contenu d'un seul mot
+          "<nowrap>#{tbefore} #{content} #{tafter}</nowrap>"
+        end
+      end)
+    else
+      string
+    end
   end
 
 
@@ -316,7 +331,7 @@ defmodule Pharkdown.Formatter do
   end
 
 
-  @regex_slashed_signs ~r/\\(.)/
+  @regex_slashed_signs ~r/\\([^n])/
   defp capture_slashed_caracters(string, options) do
     data_besides = %{texte: string, table: [], index: -1, regex: @regex_slashed_signs}
     capture_codes_besides(data_besides, options)
@@ -356,6 +371,16 @@ defmodule Pharkdown.Formatter do
       remp = "SLHSGN#{index}NGSHLS"
       String.replace(accu, remp, sign)
     end)
+  end
+
+  # Les toutes dernières corrections. C'est ici par exemple qu'on
+  # remplace les \n par des <br /> (note : ce qui pourrait être fait
+  # avant, maintenant que le caractère n'est plus mis de côté, mais
+  # bon…)
+  @regex_returns ~r/( +)?\\n( +)?/    ; @remp_returns "<br />"
+  defp very_last_correction(string, options) do
+    string
+    |> String.replace(@regex_returns, @remp_returns)
   end
 
   # ------------ SOUS MÉTHODES ---------------
