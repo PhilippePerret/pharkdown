@@ -8,4 +8,9 @@ defmodule EssaiUseWeb.PageController do
   def home(conn, _params) do
     render(conn, :home)
   end
+
+  def essai(_conn, _params) do
+    IO.puts "Je passe par l'essai"
+  end
+  
 end
