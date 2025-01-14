@@ -181,4 +181,19 @@ defmodule Pharkdown.ParserTest do
     # assert expect == Parser.tokenize(code)
     assert expect == Parser.parse(code)
   end
+
+  @tag :skip
+  test "Environnement dictionnaire (:dictionary)" do
+    code = """
+    Un paragraphe.
+    dictionary/
+    : Un terme à définir
+    :: La définition de ce terme.
+    /dictionary
+    """
+
+    actual = Parser.parse(code)
+    expect = []
+    assert actual == expect
+  end
 end

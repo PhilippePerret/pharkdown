@@ -82,11 +82,17 @@ defmodule Pharkdown.Formatter do
 
   # Formatage du type dictionary
   # ----------------------------
-  # Pour les tests, cf. la fonction :tests_pour_formate_dictionary
+  # Pour les tests, cf. la fonction doctests_pour_formate_dictionary/0
   def formate(:dictionary, data, _options) do
-    IO.inspect(data, label: "Données pour dictionnaire")
-    "Ça ne fonctionne pas encore."
+    # IO.puts("-> formate(:dictionary\navec data: #{inspect data})")
+    "<dl>" <> (data[:content]
+    |> Enum.map(fn par ->
+      formate_dict_element(par[:type], par[:content])
+    end)
+    |> Enum.join("")) <> "</dl>"
   end
+  defp formate_dict_element(:term, content), do: "<dt>#{content}</dt>"
+  defp formate_dict_element(:definition, content), do: "<dd>#{content}</dd>"
 
   # Formatage quelconque, non défini
   def formate(type, _data, _options) do
@@ -221,18 +227,18 @@ defmodule Pharkdown.Formatter do
     "<nowrap>« un »</nowrap> et <nowrap>« deux</nowrap> <nowrap>mots »</nowrap> et <nowrap>« encore</nowrap> trois <nowrap>mots »</nowrap> sans <nowrap>« insécable »</nowrap> et <nowrap>« ça</nowrap> <nowrap>aussi »</nowrap> et <nowrap>« encore</nowrap> ça <nowrap>aussi »</nowrap>."
 
   """
-  def __tests_pour_formate_texte_generale, do: nil
+  def __doctests_pour_formate_texte_generale, do: nil
 
 
   @doc """
   Tests pour la méthode formate/3 pour un dictionnaire
   ## Example
   
-    iex> Pharkdown.Formatter.formate(:dictionary, %{}, [])
-    "ça marche"
+    iex> Pharkdown.Formatter.formate(:dictionary, [type: :dictionary, content: [[type: :term, content: "Un terme à expliquer"], [type: :definition, content: "La définition du terme."]]], [])
+    "<dl><dt>Un terme à expliquer</dt><dd>La définition du terme.</dd></dl>"
   
   """  
-  def __tests_pour_formate_dictionary, do: nil
+  def doctests_pour_formate_dictionary, do: nil
 
   # Traitement des guillemets droits
   @regex_guillemets ~r/"(.+)"/U   ; @remp_guillemets "« \\1 »"

@@ -41,10 +41,10 @@ defmodule Pharkdown.Parser do
     # liste où on se trouve.
     |> String.replace(@regex_indentation, "")
     # |> String.replace("\n\n+", "\n")
-          # NON. Il ne faut surtout pas supprimer ici les doubles 
-          # chariots car ils servent par exemple à délimiter les
-          # fin de liste.
-    |> IO.inspect(label: "\nTEXTE AVANT TOKENIZE")
+    # NON. Il ne faut surtout pas supprimer ici les doubles 
+    # chariots car ils servent par exemple à délimiter les
+    # fin de liste.
+    # |> IO.inspect(label: "\nTEXTE AVANT TOKENIZE")
     |> tokenize(options)
     # |> IO.inspect(label: "\n<- parse avec")
   end
