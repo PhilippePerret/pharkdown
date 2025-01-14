@@ -15,6 +15,8 @@ defmodule Pharkdown.Parser do
 
   }
 
+  @regex_indentation ~r/^[\t  ]+/um
+
   @regex_balise_token ~r/^TOKEN([0-9]+)NEKOT$/
   @regex_balise_token_multi ~r/^TOKEN([0-9]+)NEKOT$/m
 
@@ -31,10 +33,18 @@ defmodule Pharkdown.Parser do
   def parse(string, options \\ []) when is_binary(string) do
     string
     |> String.replace("\r", "")
+    # On supprime toute indentation. L'indentation, dans Pharkdown,
+    # est purement visuelle (ce qui est sémantique, puisque ce format
+    # n'existe que pour être plus lisible). Voir comment les imbrica-
+    # tions sont marquées, avec les listes, par exemple, où c'est le
+    # nombre d'astérisques ou de tirets qui déterminent le niveau de
+    # liste où on se trouve.
+    |> String.replace(@regex_indentation, "")
     # |> String.replace("\n\n+", "\n")
           # NON. Il ne faut surtout pas supprimer ici les doubles 
           # chariots car ils servent par exemple à délimiter les
           # fin de liste.
+    |> IO.inspect(label: "\nTEXTE AVANT TOKENIZE")
     |> tokenize(options)
     # |> IO.inspect(label: "\n<- parse avec")
   end
@@ -67,7 +77,14 @@ defmodule Pharkdown.Parser do
 
     iex> Pharkdown.Parser.tokenize("document/\\nPremière ligne\\nDeuxième ligne\\n/document\\nAutre paragraphe")
     [
-      {:environment, [content: "Première ligne\\nDeuxième ligne", type: :document]},
+      {:environment, [
+          type: :document, 
+          content: [
+            [type: :paragraph, content: "Première ligne"],
+            [type: :paragraph, content: "Deuxième ligne"]
+          ]
+        ]
+      },
       {:paragraph, [content: "Autre paragraphe"]}
     ]
 
@@ -140,8 +157,8 @@ defmodule Pharkdown.Parser do
 
     iex> Pharkdown.Parser.tokenize("document/\\nLa ligne\\n/document\\n## Le sous-titre")
     [
-      {:environment, [type: :document content: [
-        [content: "La ligne"]
+      {:environment, [type: :document, content: [
+        [type: :paragraph, content: "La ligne"]
       ]]},
       {:title, [content: "Le sous-titre", level: 2]}
     ]
@@ -375,17 +392,12 @@ defmodule Pharkdown.Parser do
       content: collector.env_content
     ]
     add_to_collector(collector, :environment, data, tout)
-    |> IO.inspect(label: "\nCollector après ajout de #{tout}")
+    # |> IO.inspect(label: "\nCollector après ajout de #{tout}")
   end
 
   @doc """
   Traitement du contenu d'un dictionnaire
   Le renvoie sous forme de liste de tokens
-
-  # Examples
-
-    iex> Pharkdown.Parser.treat_content_by_env(:dictionary, ": Un terme\\n:: La définition du terme.", %{index: 12})
-
   """
   def treat_content_by_env(:dictionary, content, collector) do
     content
@@ -394,9 +406,9 @@ defmodule Pharkdown.Parser do
       line = String.trim(line)
       cond do
       String.starts_with?(line, ": ")  ->
-        add_content_to_env_content(String.slice(line, 2..-1), :term, accu)
+        add_content_to_env_content(String.slice(line, 2..-1//1), :term, accu)
       String.starts_with?(line, ":: ") -> 
-        add_content_to_env_content(String.slice(line, 3..-1), :definition, accu)
+        add_content_to_env_content(String.slice(line, 3..-1//1), :definition, accu)
       true -> raise "Ligne de dictionnaire mal formatée : #{inspect line}. Devrait commencer par ': ' (nouveau terme) ou ':: ' (nouveau pargraphe de définition)."
       end
     end)
@@ -409,7 +421,7 @@ defmodule Pharkdown.Parser do
     |> Enum.reduce(collector, fn line, accu -> 
       line
       |> String.trim()
-      |> add_content_to_env_content(:paragraph, accu) # => c'est un accumulateur qui ressort
+      |> add_content_to_env_content(:paragraph, accu) # => accumulateur
     end)
   end
   # Par défaut
@@ -417,11 +429,12 @@ defmodule Pharkdown.Parser do
 
 
 
-  defp add_content_to_env_content(content, type, coll) do
+  defp add_content_to_env_content(content, type, accu) do
+    # IO.puts "-> add_content_to_env_content(\navec content: #{inspect content}\navec type: #{inspect type}\navec collector: #{inspect accu}\n)"
     content   = String.trim(content) # économisera beaucoup d'encre dans les fonctions
     new_content = [type: type, content: content]
-    Map.merge(coll, %{
-      env_content:  coll.env_content ++ [new_content]
+    Map.merge(accu, %{
+      env_content:  accu.env_content ++ [new_content]
     })
   end
 
@@ -461,7 +474,7 @@ defmodule Pharkdown.Parser do
   def reorder_tokens(collector) do
     
     ini_tokens  = collector.tokens
-    |> IO.inspect(label: "\nTous les tokens avant ré-ordonnancement")
+    # |> IO.inspect(label: "\nTous les tokens avant ré-ordonnancement")
     collector   = %{collector | tokens: []}
 
     # IO.inspect(collector.texte, label: "\nCollector.Texte avant ré-ordonnancemnt")
