@@ -40,7 +40,6 @@ e après X, V, I ou un nombre comme dans XIXe ou 54e => e en exposant
 
 Pour que ces corrections ne s'effectuent pas, mettre les options à `correct: false`. Seul le circonflexe sera traité en tant que marque d'exposant. Le texte `1\^ère` fautif restera `1<sup>ère</sup>` (par exemple dans un cours d'orthographe).
 
-### Substitutions
 
 ### Liens `[...](...)`
 
@@ -67,9 +66,11 @@ On peut forcer un simple retour à la ligne (`<br />` en HTML) en utilisant `\n`
 Le texte avec un \n Retour à la ligne
 ~~~
 
+Note : les espaces autour du `\n` seront toujours supprimées.
+
 ### Les lignes
 
-Contrairement à Markdown — et c'est une des grandes différences —, on ne sépare par les paragraphes par des doubles-retours chariot. Ainsi, le texte :
+Contrairement à Markdown — et c'est une des grandes différences —, on ne sépare pas les paragraphes par des doubles-retours chariot. Ainsi, le texte :
 
 ~~~
 Mon paragraphe
@@ -78,20 +79,35 @@ Mon deuxième paragraphe
 
 … sera interprété comme deux paragraphes distincts.
 
-Quand on doit vraiment forcément un retour à la ligne, on ajoute un `\n` avant d'écrire le paragraphe en dessous ou à la suite. Par exemple, le texte :
+Quand on doit vraiment forcément un retour à la ligne, on ajoute un `\n` comme on l'a vu précédemment.
+
+## Stylisation
+
+Une des grandes forces de Pharkdown par rapport à Markdown est de pouvoir styliser les paragraphes de façon simple, avec des classes CSS propres, et de pouvoir définir des identifiants afin d'y faire référence en CSS.
+
+Ces classes et ces identifiants sont simplement définies en début de paragraphe, par un texte qui ne doit contenir que des lettres, des points, des tirets et des nombres. Il 
 
 ~~~
-Mon paragraphe \n Avec un autre à la ligne
+.css1.css2.en_core#monPar: Le paragraphe sera dans le style (class) css1, css2 et encore et aura pour identifiant '#monPar`.
 ~~~
 
-… ou 
+Le code ci-dessus produira : 
 
 ~~~
-Mon paragraphe \n
-avec un autre à la ligne
+<p id="monPar" class="css1 css2 en_core">Le paragraphe sera dans le style (class) css1, css2 et encore et aura pour identifiant '#monPar`.</p>
 ~~~
 
-… seront considéré comme des textes dans le même paragraphe mais auquel on ajoutera un `<br />` pour forcer le passage à la ligne.
+On peut même stipuler explicitement la balise à utiliser en la mettant en tout premier, sans point :
+
+~~~
+div#monDiv: C'est un div et pas un paragraphe.
+~~~
+
+… produira :
+
+~~~
+<div id="monDiv">C'est un div et pas un paragraphe.</div>
+~~~
 
 ## Les environnements
 
@@ -110,6 +126,7 @@ Ces environnements sont :
 ~~~
 document (ou 'doc')
 blockcode (ou 'code' ou 'bcode')
+dictionary (ou 'dict' ou 'dico' ou 'dictionnaire')
 ~~~
 
 À l'avenir, l'utilisateur pourra définir le traitement de ses propres environnements.
@@ -154,3 +171,29 @@ On peut partir d'un autre chiffre sans problème :
 - son deuxième item
 etc.
 ~~~
+
+### Dictionnaire (liste de définitions)
+
+Permet d'avoir des textes qui se présentent de cette manière, avec un terme et une définition.
+
+dico/
+:  terme
+:: Définition
+:: Autre paragraphe définition
+:  autre terme
+:: .exergue: Définition dans le style exergue.
+/dico
+
+… en les définissant ainsi :
+
+code/
+dico/
+:  terme
+:: Définition
+:: Autre paragraphe définition
+:  autre terme
+:: .exergue: Définition dans le style exergue.
+/dico
+/code
+
+Les classes concernées par les dictionnaires sont `dl` pour "dictionary list", `dt` pour "dictionary term" et `dd` pour "dictionary definition".

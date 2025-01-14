@@ -10,6 +10,30 @@ defmodule Pharkdown.Formatter do
     |> Enum.join("\n")
   end
 
+  # Les tests de cette (grosse) fonction sont définis avant la
+  # fonction virtuelle :__tests_pour_formate_texte_generale
+  def formate(texte, options) when is_binary(texte) do
+    # On commence par mettre de côté tous les caractères échappés
+    # IO.inspect(texte, label: "\nTexte avant déslashiation")
+    %{texte: texte, table: codes_beside} = 
+    capture_slashed_caracters(texte, options)
+    |> capture_hex_and_composants(options)
+
+    # IO.inspect(slahed_signs, label: "\nTable Slahed_signs")
+
+    texte
+    # |> IO.inspect(label: "\nTEXTE POUR TRANSFORMATIONS")
+    |> formate_smart_guillemets(options)
+    |> glue_insecables(options)
+    |> formate_simples_styles(options)
+    |> formate_href_links(options)
+    |> formate_exposants(options)
+    # --- /Transformations ---
+    # On remet tous les caractères échappés
+    |> replace_codes_beside(codes_beside, options)
+    |> very_last_correction(options)
+  end
+
   def formate(:paragraph, data, _options) do
     # TODO Ajouter les classes, etc.
     "<p>" <> data[:content] <> "</p>"
@@ -56,11 +80,18 @@ defmodule Pharkdown.Formatter do
     "<#{tag}>" <> accu.content <> "</#{tag}>"
   end
 
+  # Formatage du type dictionary
+  # ----------------------------
+  # Pour les tests, cf. la fonction :tests_pour_formate_dictionary
+  def formate(:dictionary, data, _options) do
+    IO.inspect(data, label: "Données pour dictionnaire")
+    "Ça ne fonctionne pas encore."
+  end
+
   # Formatage quelconque, non défini
   def formate(type, _data, _options) do
     raise "Je ne sais pas encore traiter le type #{type}"
   end
-
 
 
   @doc """
@@ -190,29 +221,18 @@ defmodule Pharkdown.Formatter do
     "<nowrap>« un »</nowrap> et <nowrap>« deux</nowrap> <nowrap>mots »</nowrap> et <nowrap>« encore</nowrap> trois <nowrap>mots »</nowrap> sans <nowrap>« insécable »</nowrap> et <nowrap>« ça</nowrap> <nowrap>aussi »</nowrap> et <nowrap>« encore</nowrap> ça <nowrap>aussi »</nowrap>."
 
   """
-  def juste_pour_definir_le_doc_de_la_suivante, do: nil
+  def __tests_pour_formate_texte_generale, do: nil
 
-  def formate(texte, options) when is_binary(texte) do
-    # On commence par mettre de côté tous les caractères échappés
-    # IO.inspect(texte, label: "\nTexte avant déslashiation")
-    %{texte: texte, table: codes_beside} = 
-    capture_slashed_caracters(texte, options)
-    |> capture_hex_and_composants(options)
 
-    # IO.inspect(slahed_signs, label: "\nTable Slahed_signs")
-
-    texte
-    # |> IO.inspect(label: "\nTEXTE POUR TRANSFORMATIONS")
-    |> formate_smart_guillemets(options)
-    |> glue_insecables(options)
-    |> formate_simples_styles(options)
-    |> formate_href_links(options)
-    |> formate_exposants(options)
-    # --- /Transformations ---
-    # On remet tous les caractères échappés
-    |> replace_codes_beside(codes_beside, options)
-    |> very_last_correction(options)
-  end
+  @doc """
+  Tests pour la méthode formate/3 pour un dictionnaire
+  ## Example
+  
+    iex> Pharkdown.Formatter.formate(:dictionary, %{}, [])
+    "ça marche"
+  
+  """  
+  def __tests_pour_formate_dictionary, do: nil
 
   # Traitement des guillemets droits
   @regex_guillemets ~r/"(.+)"/U   ; @remp_guillemets "« \\1 »"
@@ -378,7 +398,7 @@ defmodule Pharkdown.Formatter do
   # avant, maintenant que le caractère n'est plus mis de côté, mais
   # bon…)
   @regex_returns ~r/( +)?\\n( +)?/    ; @remp_returns "<br />"
-  defp very_last_correction(string, options) do
+  defp very_last_correction(string, _options) do
     string
     |> String.replace(@regex_returns, @remp_returns)
   end

@@ -3,16 +3,20 @@ defmodule Pharkdown.Parser do
   # alias Pharkdown.Formatter
 
   @known_environments [
-    "document", "doc", "blockcode", "bcode"
+    "document", "doc", "blockcode", "bcode", "dictionary", "dico", "dict", "dictionnaire"
   ]
   @environment_substitution %{
     "doc"   => "document",
     "bcode" => "blockcode",
     "code"  => "code",
+    "dico"  => "dictionary",
+    "dict"  => "dictionary",
+    "dictionnaire" => "dictionary",
+
   }
 
-  @regex_balise_token ~r/^TOKEN_([0-9]+)_TOKEN$/
-  @regex_balise_token_multi ~r/^TOKEN_([0-9]+)_TOKEN$/m
+  @regex_balise_token ~r/^TOKEN([0-9]+)NEKOT$/
+  @regex_balise_token_multi ~r/^TOKEN([0-9]+)NEKOT$/m
 
   @doc """
   Parse le code +string+
@@ -42,29 +46,29 @@ defmodule Pharkdown.Parser do
   ## Examples
 
     iex> Pharkdown.Parser.tokenize("Une simple phrase")
-    [{:paragraph, [index: 1, content: "Une simple phrase"]}]
+    [{:paragraph, [content: "Une simple phrase"]}]
 
     iex> Pharkdown.Parser.tokenize("# Un titre simple")
-    [{:title, [index: 1, content: "Un titre simple", level: 1]}]
+    [{:title, [content: "Un titre simple", level: 1]}]
 
     iex> Pharkdown.Parser.tokenize("# Un grand titre\\n## Un sous-titre")
     [
-      {:title, [index: 1, content: "Un grand titre", level: 1]},
-      {:title, [index: 2, content: "Un sous-titre", level: 2]},
+      {:title, [content: "Un grand titre", level: 1]},
+      {:title, [content: "Un sous-titre", level: 2]},
     ]
 
     iex> Pharkdown.Parser.tokenize("# Un grand titre\\nUn simple paragraphe.")
     [
-      {:title, [index: 1, content: "Un grand titre", level: 1]},
-      {:paragraph, [index: 2, content: "Un simple paragraphe."]},
+      {:title, [content: "Un grand titre", level: 1]},
+      {:paragraph, [content: "Un simple paragraphe."]},
     ]
 
-    - Environnement -
+    --- Environnements ---
 
     iex> Pharkdown.Parser.tokenize("document/\\nPremière ligne\\nDeuxième ligne\\n/document\\nAutre paragraphe")
     [
-      {:environment, [index: 1, content: "Première ligne\\nDeuxième ligne", type: :document]},
-      {:paragraph, [index: 2, content: "Autre paragraphe"]}
+      {:environment, [content: "Première ligne\\nDeuxième ligne", type: :document]},
+      {:paragraph, [content: "Autre paragraphe"]}
     ]
 
     - Liste -
@@ -74,7 +78,7 @@ defmodule Pharkdown.Parser do
       {
         :list, 
         [
-          index: 1, type: :regular, first: nil, 
+          type: :regular, first: nil, 
           content: [
             [content: "Premier item", level: 1], 
             [content: "Deuxième item", level: 1], 
@@ -89,7 +93,7 @@ defmodule Pharkdown.Parser do
       {
         :list, 
         [
-          index: 1, type: :ordered, first: 5, 
+          type: :ordered, first: 5, 
           content: [
             [content: "Premier", level: 1], 
             [content: "Deuxième", level: 1], 
@@ -99,6 +103,17 @@ defmodule Pharkdown.Parser do
       }
     ]
 
+    // - Dictionnaire -
+
+    iex> Pharkdown.Parser.tokenize("Premier paragraphe\\ndictionary/\\n: un terme \\n:: Sa définition \\n/dictionary")
+    [
+      {:paragraph, [content: "Premier paragraphe"]},
+      {:environment, [type: :dictionary, content: [
+        [type: :term, content: "un terme"],
+        [type: :definition, content: "Sa définition"]
+      ]]}
+    ]
+
     # --- Liens ---
     # Non, c'est fait sur tout le texte à la fin.
 
@@ -106,27 +121,29 @@ defmodule Pharkdown.Parser do
 
     iex> Pharkdown.Parser.tokenize("Tout premier paragraphe\\n# Titre \\n* item 1\\n* item 2\\n\\n## Autre titre\\nParagraphe")
     [
-      {:paragraph, [index: 4, content: "Tout premier paragraphe"]},
-      {:title, [index: 1, content: "Titre", level: 1]},
+      {:paragraph, [content: "Tout premier paragraphe"]},
+      {:title, [content: "Titre", level: 1]},
       {
         :list,  [
-          index: 3, type: :regular, first: nil, 
+          type: :regular, first: nil, 
           content: [
             [content: "item 1", level: 1], 
             [content: "item 2", level: 1]
           ]
         ]
       },
-      {:title, [index: 2, content: "Autre titre", level: 2]},
-      {:paragraph, [index: 5, content: "Paragraphe"]}
+      {:title, [content: "Autre titre", level: 2]},
+      {:paragraph, [content: "Paragraphe"]}
     ]
 
     - Ordre différent -
 
     iex> Pharkdown.Parser.tokenize("document/\\nLa ligne\\n/document\\n## Le sous-titre")
     [
-      {:environment, [index: 2, content: "La ligne", type: :document]},
-      {:title, [index: 1, content: "Le sous-titre", level: 2]}
+      {:environment, [type: :document content: [
+        [content: "La ligne"]
+      ]]},
+      {:title, [content: "Le sous-titre", level: 2]}
     ]
 
    
@@ -139,7 +156,7 @@ defmodule Pharkdown.Parser do
       placés en premier dans collector.tokens (pas le final, mais le
       collector.tokens intermédiaire) même s'ils sont après d'autres
       choses. C'est la raison pour laquelle on place toutes les 
-      marques de token TOKEN_xx_TOKEN dans le texte, pour pouvoir 
+      marques de token TOKEN<xx>NEKOT dans le texte, pour pouvoir 
       ensuite les passer en revue et mettre les tokens dans l'ordre.
 
     N001
@@ -166,7 +183,7 @@ defmodule Pharkdown.Parser do
   @regex_known_environments ~r/^(#{Enum.join(@known_environments, "|")})\/\n(.+)\n\/\1$/ms
 
   def tokenize(string, options \\ []) do
-    collector = %{texte: string, tokens: [], index: 0, options: options}
+    collector = %{texte: string, tokens: [], options: options}
     
     # IO.inspect(string, label: "\nSTRING AU DÉPART")
     
@@ -177,7 +194,9 @@ defmodule Pharkdown.Parser do
     |> scan_for_known_environments()
     # Il faut scanner les listes après les environnements car des 
     # environnements peuvent se trouver dans les listes (cf. N001)
+    # |> IO.inspect(label: "\nCOLLECTOR AVANT traitement des listes")
     |> scan_for_list_in()
+    # |> IO.inspect(label: "\nCOLLECTOR APRÈS traitement des listes")
     |> scan_for_rest() # tout ce qui reste est considéré comme des paragraphes
     |> reorder_tokens() # on met les tokens dans l'ordre (cf. N000)
     |> (fn coll -> coll.tokens end).()
@@ -195,19 +214,19 @@ defmodule Pharkdown.Parser do
   #   Note : la fonction ajoute toujours l'index courant au +data+
   #          transmises.
   #
-  # @param collector  Map  Le collecteur général
+  # @param collector  Map  Le collecteur (accumulateur) général
   # @param type       Atom Le type de token, par exemple :title ou :paragraph
   # @param data       List les données propres au token (par exemple
   #                   le :level pour un titre)
   # @param found      Le texte trouvé dans le texte actuel.
   #
   defp add_to_collector(collector, type, data, found) do
-    new_index = collector.index + 1
-    data = Keyword.put(data, :index, new_index)
-    # remp  = "TOKEN_#{new_index}_TOKEN\n" # ATTENTION : ajouter un retour
-                # chariot ici fait planter l'analyse d'un environnement à
-                # l'intérieur d'une liste.
-    remp  = "TOKEN_#{new_index}_TOKEN"
+    # L'index de ce token ajouté
+    token_index = Enum.count(collector.tokens)
+    remp  = "TOKEN#{token_index}NEKOT"
+    ### ATTENTION : ne pas ajouter un retour à la fin, cela fait
+    # échouer l'analyse d'un environnement à l'intérieur d'une 
+    # liste.
     new_texte = 
       case collector.texte do
       x when is_binary(x) -> 
@@ -218,7 +237,6 @@ defmodule Pharkdown.Parser do
     # |> IO.inspect(label: "collector.texte après #{inspect(type)}")
 
     Map.merge(collector, %{
-      index:  new_index, 
       texte:  new_texte,
       tokens: collector.tokens ++ [{type, data}]
     })
@@ -233,7 +251,6 @@ defmodule Pharkdown.Parser do
 
         # Données pour le token
         data = [
-          index:    collector.index + 1,
           content:  String.trim(contenu), 
           level:    String.length(level)
         ]
@@ -272,7 +289,7 @@ defmodule Pharkdown.Parser do
                 # les items indépendants
     (?:[\*\-]+ .+) # suivi par une ou plusieurs astérisques ou tirets
     (?:
-      \n(?:[\*\-]+ |TOKEN_)(?:.+)
+      \n(?:[\*\-]+ |TOKEN)(?:.+)
     )*            # Autant de fois qu on peut en trouver
   )             # Tous les items -- sans numéro
   $             # La fin de ligne
@@ -283,9 +300,9 @@ defmodule Pharkdown.Parser do
   #   ([\*\-]+ )  # 1 ou plusieurs astérisques ou tirets suivi par 
   #               # espace
   #   |           # ou
-  #   TOKEN_      # une marque d'environnement
+  #   NEKOT       # une fin de marque d'environnement
   #   )|\z)/msx
-  @reg_list_item ~r/^(?:([\*\-]+) (.+)|TOKEN_([0-9]+)_TOKEN)$/m
+  @reg_list_item ~r/^(?:([\*\-]+) (.+)|TOKEN([0-9]+)NEKOT)$/m
   defp scan_for_list_in(collector) do
     Regex.scan(@regex_list, collector.texte)
     |> Enum.reduce(collector, fn found, coll ->
@@ -338,20 +355,74 @@ defmodule Pharkdown.Parser do
   #   etc.
   # ]
   defp scan_for_known_environments(collector) do
-    collector.tokens
     Regex.scan(@regex_known_environments, collector.texte)
     |> Enum.reduce(collector, &treat_known_environment/2)
   end
 
   defp treat_known_environment(found, collector) do
+    IO.puts "-> treat_known_environment(\navec found:#{inspect found}\navec collector: #{inspect collector}\n)"
     [tout, env_name, content] = found
-    env_name = @environment_substitution[env_name] || env_name
+    env_name  = 
+    (@environment_substitution[env_name] || env_name)
+    |> String.to_atom()
+
+    collector = 
+      env_name
+      |> treat_content_by_env(content, Map.merge(collector, %{env_content: []}))
+    
     data = [
-      content: content, 
-      type: String.to_atom(env_name)
+      type: env_name,
+      content: collector.env_content
     ]
     add_to_collector(collector, :environment, data, tout)
-    # |> IO.inspect(label: "\nCollector après ajout de #{tout}")
+    |> IO.inspect(label: "\nCollector après ajout de #{tout}")
+  end
+
+  @doc """
+  Traitement du contenu d'un dictionnaire
+  Le renvoie sous forme de liste de tokens
+
+  # Examples
+
+    iex> Pharkdown.Parser.treat_content_by_env(:dictionary, ": Un terme\\n:: La définition du terme.", %{index: 12})
+
+  """
+  def treat_content_by_env(:dictionary, content, collector) do
+    content
+    |> String.split("\n")
+    |> Enum.reduce(collector, fn line, accu -> 
+      line = String.trim(line)
+      cond do
+      String.starts_with?(line, ": ")  ->
+        add_content_to_env_content(String.slice(line, 2..-1), :term, accu)
+      String.starts_with?(line, ":: ") -> 
+        add_content_to_env_content(String.slice(line, 3..-1), :definition, accu)
+      true -> raise "Ligne de dictionnaire mal formatée : #{inspect line}. Devrait commencer par ': ' (nouveau terme) ou ':: ' (nouveau pargraphe de définition)."
+      end
+    end)
+  end
+  # Traitement du contenu d'un environnement de type :document
+  def treat_content_by_env(:document, content, collector) do
+    IO.puts "-> treat_content_by_env(\navec :\n:document, \navec content: #{inspect content}\navec collector: #{inspect collector}\n)"
+    content
+    |> String.split("\n")
+    |> Enum.reduce(collector, fn line, accu -> 
+      line
+      |> String.trim()
+      |> add_content_to_env_content(:paragraph, accu) # => c'est un accumulateur qui ressort
+    end)
+  end
+  # Par défaut
+  def treat_content_by_env(envname, content, coll), do: coll
+
+
+
+  defp add_content_to_env_content(content, type, coll) do
+    content   = String.trim(content) # économisera beaucoup d'encre dans les fonctions
+    new_content = [type: type, content: content]
+    Map.merge(coll, %{
+      env_content:  coll.env_content ++ [new_content]
+    })
   end
 
   # Dans cette fonction, on récupère tous les paragraphes sans type
@@ -390,17 +461,23 @@ defmodule Pharkdown.Parser do
   def reorder_tokens(collector) do
     
     ini_tokens  = collector.tokens
-    # |> IO.inspect(label: "\nTous les tokens avant ré-ordonnancement")
+    |> IO.inspect(label: "\nTous les tokens avant ré-ordonnancement")
     collector   = %{collector | tokens: []}
 
     # IO.inspect(collector.texte, label: "\nCollector.Texte avant ré-ordonnancemnt")
 
+    # On boucle sur tous les TOKEN<index>NEKOT
     Regex.scan(@regex_balise_token_multi, collector.texte)
     |> Enum.reduce(collector, fn found, coll ->
-      [_tout, index] = found
-      index = String.to_integer(index) - 1
-      # IO.inspect(index, label: "INDEX")
-      %{ coll | tokens: coll.tokens ++ [Enum.at(ini_tokens, index)] }
+      [_tout, token_index] = found
+      token_index = String.to_integer(token_index)
+      # IO.inspect(token_index, label: "token_index")
+      this_token = 
+        ini_tokens
+        |> Enum.at(token_index)
+
+      # On remet les tokens dans le bon ordre
+      %{ coll | tokens: coll.tokens ++ [this_token] }
     end)
     # |> IO.inspect(label: "\nCOLLECTOR avec TOKENS RÉ-AGENCÉS")
   end

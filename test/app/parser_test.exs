@@ -11,7 +11,12 @@ defmodule Pharkdown.ParserTest do
     expect  = [
       {
         :environment, 
-        [index: 1, content: "Première ligne\nDeuxième ligne", type: :document]
+        [
+          type: :document,
+          content: [
+            [type: :paragraph, content: "Première ligne\nDeuxième ligne"]
+          ]
+        ]
       }
     ]
     assert expect == Parser.tokenize(code)
@@ -23,7 +28,12 @@ defmodule Pharkdown.ParserTest do
     expect  = [
       {
         :environment, 
-        [index: 1, content: "Première ligne\nDeuxième ligne", type: :document]
+        [
+          type: :document, 
+          content: [
+            [type: :paragraph, content: "Première ligne\nDeuxième ligne"]
+          ] 
+        ]
       }
     ]
     assert expect == Parser.tokenize(code)
@@ -35,8 +45,8 @@ defmodule Pharkdown.ParserTest do
   #   code = "document/\nPremière ligne\nDeuxième ligne\n/document\nAutre paragraphe"
   #   actual = Parser.tokenize(code)
   #   expect = [
-  #     {:environment, [index: 1, content: "Première ligne\nDeuxième ligne", type: :document]},
-  #     {:paragraph, [index: 2, content: "Autre paragraphe"]}
+  #     {:environment, [content: "Première ligne\nDeuxième ligne", type: :document]},
+  #     {:paragraph, [content: "Autre paragraphe"]}
   #   ]
   #   assert expect == actual
   # end
@@ -46,8 +56,8 @@ defmodule Pharkdown.ParserTest do
   #   code = "document/\nLa ligne\n/document\n## Le sous-titre"
   #   actual = Parser.tokenize(code)
   #   expect = [
-  #     {:environment, [index: 2, content: "La ligne", type: :document]},
-  #     {:title, [index: 1, content: "Le sous-titre", level: 2]}
+  #     {:environment, [content: "La ligne", type: :document]},
+  #     {:title, [content: "Le sous-titre", level: 2]}
   #   ]
   #   assert actual == expect
   # end
@@ -62,7 +72,7 @@ defmodule Pharkdown.ParserTest do
     ** item 3.2
     """
     expect = [
-      {:list, [index: 1, type: :regular, first: nil, content: [
+      {:list, [type: :regular, first: nil, content: [
         [content: "item 1", level: 1],
         [content: "item 1.1", level: 2],
         [content: "item 2", level: 1],
@@ -79,12 +89,12 @@ defmodule Pharkdown.ParserTest do
   test "liste numérotée" do
     code = "1- Item 1\n- Item 2\n- Item 3\nUn paragraphe"
     expect = [
-      {:list, [index: 1, type: :ordered, first: 1, content: [
+      {:list, [type: :ordered, first: 1, content: [
         [content: "Item 1", level: 1],
         [content: "Item 2", level: 1],
         [content: "Item 3", level: 1]
       ]]},
-      {:paragraph, [index: 2, content: "Un paragraphe"]}
+      {:paragraph, [content: "Un paragraphe"]}
     ]
     assert expect == Parser.tokenize(code)
     assert expect == Parser.parse(code)
@@ -93,11 +103,11 @@ defmodule Pharkdown.ParserTest do
   test "Liste numérotée partant d'un grand nombre" do
     code = "233- Item 1\n- Item 2\nUn paragraphe"
     expect = [
-      {:list, [index: 1, type: :ordered, first: 233, content: [
+      {:list, [type: :ordered, first: 233, content: [
         [content: "Item 1", level: 1],
         [content: "Item 2", level: 1]
       ]]},
-      {:paragraph, [index: 2, content: "Un paragraphe"]}
+      {:paragraph, [content: "Un paragraphe"]}
     ]
     assert expect == Parser.tokenize(code)
     assert expect == Parser.parse(code)
@@ -106,7 +116,7 @@ defmodule Pharkdown.ParserTest do
   test "Liste numérotée commençant à 5" do
     code = "5- Item 1\n-- Item 2"
     expect = [
-      {:list, [index: 1, type: :ordered, first: 5, content: [
+      {:list, [type: :ordered, first: 5, content: [
         [content: "Item 1", level: 1],
         [content: "Item 2", level: 2]
       ]]}
@@ -116,12 +126,48 @@ defmodule Pharkdown.ParserTest do
   end
 
   test "Liste avec un environnement" do
-    code = "* Item 1\ndoc/\nMon document\n/doc\n* Item 2"
-    doc_env = {:environment, [index: 1, content: "Mon document", type: :document]}
+    code = """
+    * Item 1
+    doc/
+    Mon document
+    /doc
+    * Item 2
+    """
+    doc_env = {
+      :environment, 
+      [
+        type: :document, 
+        content: [[type: :paragraph, content: "Mon document"]]
+      ]}
     expect = [
       {
         :list, [
-          index: 2, type: :regular, first: nil, 
+          type: :regular, first: nil, 
+          content: [
+            [content: "Item 1", level: 1],
+            [content: doc_env],
+            [content: "Item 2", level: 1]
+          ]
+        ]
+      }
+    ]
+    assert expect == Parser.tokenize(code)
+    assert expect == Parser.parse(code)
+  end
+
+  test "Liste avec environnement et indentation" do
+    code = """
+    * Item 1
+      doc/
+      Mon document
+      /doc
+    * Item 2
+    """
+    doc_env = {:environment, [type: :document, content: [[type: :paragraph, content: "Mon document"]]]}
+    expect = [
+      {
+        :list, [
+          type: :regular, first: nil, 
           content: [
             [content: "Item 1", level: 1],
             [content: doc_env],
