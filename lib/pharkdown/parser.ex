@@ -298,27 +298,24 @@ defmodule Pharkdown.Parser do
   #   - un string commençant par "* ", "- " ou "1- "
   #   - et allant jusqu'à une ligne ne contenant pas "\n*" ou "\n-"
   #     ou la fin
-  @regex_list ~r/
-  ^ # un début de ligne
-  ([0-9]+)?     # qui commence peut être par un chiffre pour une
-                # liste numérotée
-  (             # Pour avoir tout ce qui faut pour trouver ensuite
-                # les items indépendants
-    (?:[\*\-]+ .+) # suivi par une ou plusieurs astérisques ou tirets
-    (?:
-      \n(?:[\*\-]+ |TOKEN)(?:.+)
-    )*            # Autant de fois qu on peut en trouver
-  )             # Tous les items -- sans numéro
-  $             # La fin de ligne
-  /xm
-  # (?!           # qui ne doit pas contenir ensuite
-  #   \n          # un retour chariot suivi de
-  #   (           # soit…
-  #   ([\*\-]+ )  # 1 ou plusieurs astérisques ou tirets suivi par 
-  #               # espace
-  #   |           # ou
-  #   NEKOT       # une fin de marque d'environnement
-  #   )|\z)/msx
+  @regex_list ~r/^([0-9]+)?((?:[\*\-]+ .+)(?:\n(?:[\*\-]+ |TOKEN)(?:.+))*)$/mu
+  # Ci-dessous, l'explication de l'expression régulière ci-dessus,
+  # mais qu'on doit conserver en ligne car mis en x, elle ne fonc-
+  # tionne pas comme prévu au niveau des espaces (x doit les suppri-
+  # mer ce qui fait que *Un long texte en italique* sur une ligne
+  # est considéré comme un item de liste)
+  # ^ # un début de ligne
+  # ([0-9]+)?     # qui commence peut être par un chiffre pour une
+  #               # liste numérotée
+  # (             # Pour avoir tout ce qui faut pour trouver ensuite
+  #               # les items indépendants
+  #   (?:[\*\-]+ .+) # suivi par une ou plusieurs astérisques ou tirets
+  #   (?:
+  #     \n(?:[\*\-]+ |TOKEN)(?:.+)
+  #   )*            # Autant de fois qu on peut en trouver
+  # )             # Tous les items -- sans numéro
+  # $             # La fin de ligne
+  # /xmu
   @reg_list_item ~r/^(?:([\*\-]+) (.+)|TOKEN([0-9]+)NEKOT)$/m
   defp scan_for_list_in(collector) do
     Regex.scan(@regex_list, collector.texte)
