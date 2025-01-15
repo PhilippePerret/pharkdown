@@ -1,12 +1,14 @@
 defmodule Pharkdown.Formatter do
 
   @doc """
-  Fonction principale qui reçoit le découpage de la fonction Pharkdown.Parser.parse et
-  le met en forme.
+  Fonction principale qui reçoit le découpage (donc les tokens) de la fonction
+  Pharkdown.Parser.parse et le met en forme.
   """
   def formate(liste, options) when is_list(liste) do
     liste
     |> Enum.map(fn {type, data} -> 
+      IO.inspect(type, label: "Type du token")
+      IO.inspect(data, label: "Data du token")
       case type do
       :environment -> formate(data[:type], data, options)
       _ -> formate(type, data, options) 

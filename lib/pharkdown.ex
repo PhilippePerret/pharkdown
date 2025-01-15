@@ -14,7 +14,7 @@ defmodule Pharkdown do
       NaiveDateTime.after?(datetime, accu.datetime) && %{ accu | datetime: datetime } || accu
     end)
     |> Map.get(:datetime)
-    |> IO.inspect(label: "\n@last_pharkdown_modify_datetime")
+    # |> IO.inspect(label: "\n@last_pharkdown_modify_datetime")
   
 
   def phad_files_in_folder(template_folder) do
@@ -27,7 +27,7 @@ defmodule Pharkdown do
         {:html, Path.join([template_folder, Path.basename(name, Path.extname(name)) <> ".html.heex"])}
       ]
     end)
-    |> IO.inspect(label: "Pharkdown files")
+    # |> IO.inspect(label: "Pharkdown files")
   end
 
   defp mtime_to_naive_date_time(mtime) do
@@ -42,7 +42,7 @@ defmodule Pharkdown do
   #   oks:    [Fichiers avec .html.heex à jour]
   # 
   def analyse_phad_files(phad_files) do
-    IO.puts "-> analyse_phad_files"
+    # IO.puts "-> analyse_phad_files"
     phad_files
     |> Enum.reduce(%{new: [], mod: [], oks: []}, fn dfile, acc ->
       mtime_html = File.exists?(dfile[:html]) && mtime_to_naive_date_time(File.stat!(dfile[:html]).mtime)
@@ -54,16 +54,16 @@ defmodule Pharkdown do
       true -> %{acc | oks: acc.oks ++ [ dfile ] }
       end
     end)
-    |> IO.inspect(label: "Répartition des fichiers")
+    # |> IO.inspect(label: "Répartition des fichiers")
   end
   
   def update_phad_files(phad_data) do
     Enum.each(phad_data.new, fn dfile ->
-      IO.puts "Création du fichier HTML de #{dfile[:name]}"
+      # IO.puts "Création du fichier HTML de #{dfile[:name]}"
       Pharkdown.Engine.compile_file(dfile[:phad], dfile[:html], dfile[:name])
     end)
     Enum.each(phad_data.mod, fn dfile ->
-      IO.puts "Actualisation du fichier HTML de #{dfile[:name]}"
+      # IO.puts "Actualisation du fichier HTML de #{dfile[:name]}"
       File.rm(dfile[:html])
       Pharkdown.Engine.compile_file(dfile[:phad], dfile[:html], dfile[:name])
     end)
@@ -85,7 +85,7 @@ defmodule Pharkdown do
       File.exists?(template_folder) || raise "Template folder not found: #{template_folder}"
   
       defp check_and_update_phad_files do
-        IO.inspect("Vérification et génération des fichiers...")
+        # IO.inspect("Vérification et génération des fichiers...")
         Pharkdown.phad_files_in_folder(unquote(template_folder))
         |> Pharkdown.analyse_phad_files()
         |> Pharkdown.update_phad_files()
