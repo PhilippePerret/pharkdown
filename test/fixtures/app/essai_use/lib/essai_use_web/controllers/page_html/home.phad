@@ -1,0 +1,17 @@
+# Pharkdown
+
+*Cette page doit permettre de voir tous les formatages en action. À mesure qu'on ajoute des traitements, on le reporte ici pour les voir en direct.*
+
+C'est une premier page.
+
+J'ajoute une ligne au fichier phad.
+
+dictionary/
+: Mon premier terme
+:: C'est ça définition qui suit, exactement.
+: Un autre terme aussi pour voir
+:: C'est le premier paragraphe de définition.
+:: Deuxième paragraphe de définition.
+/dictionary
+
+Un paragraphe au-dessous.

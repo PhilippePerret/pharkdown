@@ -3,11 +3,13 @@ defmodule Pharkdown do
   Documentation for `Pharkdown`.
   """
 
+
   # Pour savoir si le programme a été changé
-  @last_pharkdown_modify_datetime  ["engine.ex", "formater.ex", "loader.ex","parser.ex"]
+  @last_pharkdown_modify_datetime  ["engine.ex", "formatter.ex", "loader.ex","parser.ex"]
     |> Enum.reduce(%{datetime: NaiveDateTime.new!(~D[2025-01-12], ~T[06:36:00])}, fn name, accu ->
-      datetime = File.stat!(Path.join([".","lib","pharkdown", name])).mtime
-      {{year, month, day}, {hour, minute, second}} = datetime
+      path = Path.expand(Path.join([".","lib","pharkdown", name]))
+      # |> IO.inspect(label: "\nChemin absolu")
+      {{year, month, day}, {hour, minute, second}} = File.stat!(path).mtime
       datetime = NaiveDateTime.new!(year, month, day, hour, minute, second)
       NaiveDateTime.after?(datetime, accu.datetime) && %{ accu | datetime: datetime } || accu
     end)
@@ -15,7 +17,7 @@ defmodule Pharkdown do
     |> IO.inspect(label: "\n@last_pharkdown_modify_datetime")
   
 
-  defp phad_files_in_folder(template_folder) do
+  def phad_files_in_folder(template_folder) do
     File.ls!(template_folder)
     |> Enum.filter(fn name -> Path.extname(name) == ".phad" end)
     |> Enum.map(fn name ->
@@ -25,7 +27,12 @@ defmodule Pharkdown do
         {:html, Path.join([template_folder, Path.basename(name, Path.extname(name)) <> ".html.heex"])}
       ]
     end)
-    # |> IO.inspect(label: "Pharkdown files")
+    |> IO.inspect(label: "Pharkdown files")
+  end
+
+  defp mtime_to_naive_date_time(mtime) do
+    {{year, month, day}, {hour, minute, second}} = mtime
+    NaiveDateTime.new!(year, month, day, hour, minute, second)
   end
 
   # Fonction qui analyse les fichiers .phad trouvés dans le dossier 
@@ -34,20 +41,23 @@ defmodule Pharkdown do
   #   mod:    [Fichiers avec .html.heex mais modifiés]
   #   oks:    [Fichiers avec .html.heex à jour]
   # 
-  defp analyse_phad_files(phad_files) do
+  def analyse_phad_files(phad_files) do
+    IO.puts "-> analyse_phad_files"
     phad_files
     |> Enum.reduce(%{new: [], mod: [], oks: []}, fn dfile, acc ->
+      mtime_html = File.exists?(dfile[:html]) && mtime_to_naive_date_time(File.stat!(dfile[:html]).mtime)
+      mtime_phad = mtime_to_naive_date_time(File.stat!(dfile[:phad]).mtime)
       cond do
       !File.exists?(dfile[:html]) -> %{ acc | new: acc.new ++ [ dfile ] }
-      DateTime.before?(File.stat!(dfile[:html]).mtime, @last_pharkdown_modify_datetime) -> %{ acc | mod: acc.mod ++ [ dfile ] }
-      DateTime.before?(File.stat!(dfile[:html]).mtime, File.stat!(dfile[:phad]).mtime)  -> %{ acc | mod: acc.mod ++ [ dfile ] }
+      NaiveDateTime.before?(mtime_html, @last_pharkdown_modify_datetime) -> %{ acc | mod: acc.mod ++ [ dfile ] }
+      NaiveDateTime.before?(mtime_html, mtime_phad)  -> %{ acc | mod: acc.mod ++ [ dfile ] }
       true -> %{acc | oks: acc.oks ++ [ dfile ] }
       end
     end)
-    # |> IO.inspect(label: "Répartition des fichiers")
+    |> IO.inspect(label: "Répartition des fichiers")
   end
-
-  defp update_phad_files(phad_data) do
+  
+  def update_phad_files(phad_data) do
     Enum.each(phad_data.new, fn dfile ->
       IO.puts "Création du fichier HTML de #{dfile[:name]}"
       Pharkdown.Engine.compile_file(dfile[:phad], dfile[:html], dfile[:name])
@@ -60,34 +70,30 @@ defmodule Pharkdown do
   end
 
   defmacro __using__(options) do
-    IO.puts "-> Je passe par __using__"
-    # IO.puts "Appelé par #{inspect __CALLER__}"
-    # IO.inspect(options, label: "Options dans __using__")
-    
-    module = __CALLER__.module
-    [template_folder, error_message] = 
-      if options[:templates_folder] do
-        [
-          Path.expand(options[:templates_folder]),
-          "Template folder #{options[:templates_folder]} could not be found."]
-      else
-        [
-          String.replace(__CALLER__.file, ~r/_controller\.ex$/, "_html"),
-          "Template folder for #{module} could not be found.\nUse 'use Pharkdown, templates_folder: path/to/folder' if you want to set an unconventional path."
-        ]        
+    path_folder_html = String.replace(__CALLER__.file, ~r/_controller\.ex$/, "_html")
+  
+    quote bind_quoted: [options: options, path_folder_html: path_folder_html] do
+      # Détermine le dossier des templates .phad
+      template_folder =
+        if options[:templates_folder] do
+          Path.expand(options[:templates_folder])
+        else
+          path_folder_html
+        end
+  
+      File.exists?(template_folder) || raise "Template folder not found: #{template_folder}"
+  
+      defp check_and_update_phad_files do
+        IO.inspect("Vérification et génération des fichiers...")
+        Pharkdown.phad_files_in_folder(unquote(template_folder))
+        |> Pharkdown.analyse_phad_files()
+        |> Pharkdown.update_phad_files()
       end
-    File.exists?(template_folder) || raise error_message
-
-    # Établissement de la liste des fichiers .phad à reconstruire
-    # et leur reconstruction.
-    phad_files_in_folder(template_folder)
-    |> analyse_phad_files()
-    |> update_phad_files()
-
-    quote do
-      IO.puts "On utilise mon module."
-      def hello2 do
-        IO.puts "Hello depuis Phrarkdown"
+  
+      # Plug pour vérifier les fichiers avant chaque requête
+      def call(conn, opts) do
+        check_and_update_phad_files()
+        super(conn, opts) # Assure que la connexion continue vers l'action prévue
       end
     end
   end

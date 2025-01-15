@@ -425,7 +425,7 @@ defmodule Pharkdown.Parser do
     end)
   end
   # Par défaut
-  def treat_content_by_env(envname, content, coll), do: coll
+  def treat_content_by_env(_envname, _content, coll), do: coll
 
 
 
