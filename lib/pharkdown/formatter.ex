@@ -6,7 +6,12 @@ defmodule Pharkdown.Formatter do
   """
   def formate(liste, options) when is_list(liste) do
     liste
-    |> Enum.map(fn {type, data} -> formate(type, data, options) end)
+    |> Enum.map(fn {type, data} -> 
+      case type do
+      :environment -> formate(data[:type], data, options)
+      _ -> formate(type, data, options) 
+      end
+    end)
     |> Enum.join("\n")
   end
 

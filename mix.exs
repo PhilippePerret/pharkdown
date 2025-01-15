@@ -11,7 +11,7 @@ defmodule Pharkdown.MixProject do
       docs: [
         extras: ["README.md"],
         skip_tooltips: true
-      ]    
+      ]  
     ]
   end
 

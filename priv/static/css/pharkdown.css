@@ -1,0 +1,10 @@
+dl {
+  border: 1px solid blue;
+}
+dl dt {
+  font-weight: bold;
+}
+dl dd {
+  margin-left: 1rem;
+  font-size: 0.85em;
+}
