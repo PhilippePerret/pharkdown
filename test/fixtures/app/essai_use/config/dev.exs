@@ -16,7 +16,6 @@ config :essai_use, EssaiUseWeb.Endpoint,
   secret_key_base: "4dSGF/wxnFc4cf2x0AwJYtJTzxYyjt+BvXqT0tAN8j7neUIug6es0o+dnrMcMCkC",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:essai_use, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:essai_use, ~w(--watch)]}
   ]
 
 # ## SSL Support

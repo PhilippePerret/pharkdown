@@ -41,14 +41,6 @@ defmodule EssaiUse.MixProject do
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
-      {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.1.1",
-       sparse: "optimized",
-       app: false,
-       compile: false,
-       depth: 1},
       {:finch, "~> 0.13"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
@@ -68,10 +60,9 @@ defmodule EssaiUse.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "assets.setup", "assets.build"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind essai_use", "esbuild essai_use"],
+      "assets.setup": [ "esbuild.install --if-missing"],
+      "assets.build": [ "esbuild essai_use"],
       "assets.deploy": [
-        "tailwind essai_use --minify",
         "esbuild essai_use --minify",
         "phx.digest"
       ]
