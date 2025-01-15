@@ -1,7 +1,3 @@
-/* @import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities"; */
-
 /* This file is for your main application CSS */
 /* For Pharkdown — You can choose an other theme */
 @import "/Users/philippeperret/Programmes/Phoenix/pharkdown/test/fixtures/app/essai_use/_build/dev/lib/pharkdown/priv/static/css/themes/pharkdown.css";

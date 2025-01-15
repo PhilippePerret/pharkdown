@@ -70,7 +70,7 @@ defmodule Pharkdown do
   end
 
   def add_css_file_to_project() do
-    this_app = Mix.Project.config()[:app] # |> IO.inspect(label: "L'application est ")
+    # this_app = Mix.Project.config()[:app] # |> IO.inspect(label: "L'application est ")
     app_folder = File.cwd!() # |> IO.inspect(label: "\nDOSSIER COURANT ?")
     app_css_path = Path.join([app_folder, "assets", "css", "app.css"]) # |> IO.inspect(label: "Path to app.css cherché")
     css_path = Path.join(Application.app_dir(:pharkdown, "priv/static/css"), "themes/pharkdown.css")

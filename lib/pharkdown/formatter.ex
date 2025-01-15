@@ -25,6 +25,7 @@ defmodule Pharkdown.Formatter do
     %{texte: texte, table: codes_beside} = 
     capture_slashed_caracters(texte, options)
     |> capture_hex_and_composants(options)
+    |> capture_codes(options)
 
     # IO.inspect(slahed_signs, label: "\nTable Slahed_signs")
 
@@ -98,8 +99,6 @@ defmodule Pharkdown.Formatter do
     end)
     |> Enum.join("")) <> "</dl>"
   end
-  defp formate_dict_element(:term, content), do: "<dt>#{content}</dt>"
-  defp formate_dict_element(:definition, content), do: "<dd>#{content}</dd>"
 
   # Formatage quelconque, non défini
   def formate(type, _data, _options) do
@@ -233,6 +232,17 @@ defmodule Pharkdown.Formatter do
     iex> Pharkdown.Formatter.formate("« un » et « deux mots » et « encore trois mots » sans « insécable » et « ça aussi » et « encore ça aussi ».", [])
     "<nowrap>« un »</nowrap> et <nowrap>« deux</nowrap> <nowrap>mots »</nowrap> et <nowrap>« encore</nowrap> trois <nowrap>mots »</nowrap> sans <nowrap>« insécable »</nowrap> et <nowrap>« ça</nowrap> <nowrap>aussi »</nowrap> et <nowrap>« encore</nowrap> ça <nowrap>aussi »</nowrap>."
 
+    // Code dans des backsticks
+    iex> Pharkdown.Formatter.formate("`du code`", [])
+    "<code>du code</code>"
+
+    // Le code ne doit pas être touché
+    iex> Pharkdown.Formatter.formate("`nocss: pas *italique* non plus`", [])
+    "<code>nocss: pas *italique* non plus</code>"
+
+    // Plusieurs codes
+    iex> Pharkdown.Formatter.formate("`un code` et puis `un autre code`", [])
+    "<code>un code</code> et puis <code>un autre code</code>"
   """
   def __doctests_pour_formate_texte_generale, do: nil
 
@@ -246,6 +256,9 @@ defmodule Pharkdown.Formatter do
   
   """  
   def doctests_pour_formate_dictionary, do: nil
+
+  defp formate_dict_element(:term, content), do: "<dt>#{content}</dt>"
+  defp formate_dict_element(:definition, content), do: "<dd>#{content}</dd>"
 
   # Traitement des guillemets droits
   @regex_guillemets ~r/"(.+)"/U   ; @remp_guillemets "« \\1 »"
@@ -375,15 +388,24 @@ defmodule Pharkdown.Formatter do
     capture_codes_besides(%{data_besides| regex: @regex_code_hex_et_composants}, options)
   end
 
-  defp capture_codes_besides(data_besides, _options) do
+  @regex_codes_backsticks ~r/\`(.+)\`/Uu
+  defp capture_codes(data_besides, options) do
+    capture_codes_besides(%{data_besides| regex: @regex_codes_backsticks}, [ {:before, "<code>"}, {:after, "</code>"} | options])
+  end
+
+  defp capture_codes_besides(data_besides, options) do
+    # IO.inspect(data_besides.texte, label: "\nTEXTE")
+    # IO.inspect(options, label: "OPTIONS")
     if String.match?(data_besides.texte, data_besides.regex) do
+      before = options[:before] || ""
+      tafter = options[:after]  || ""
       Regex.scan(data_besides.regex, data_besides.texte)
       |> Enum.with_index(data_besides.index + 1)
       |> Enum.reduce(data_besides, fn {found, index}, accu ->
         [tout, sign] = found
         remp = "SLHSGN#{index}NGSHLS"
         Map.merge(accu, %{
-          table: accu.table ++ [sign],
+          table: accu.table ++ [before <> sign <> tafter],
           texte: String.replace(accu.texte, tout, remp, global: false),
           index: index
         })

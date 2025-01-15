@@ -1,10 +1,24 @@
-# Pharkdown
+# Pharkdown (titre de niveau 1)
 
 *Cette page doit permettre de voir tous les formatages en action. À mesure qu'on ajoute des traitements, on le reporte ici pour les voir en direct.*
+
+## Titre de niveau 2
+
+### Titre de niveau 3
+
+#### Titre de niveau 4
+
+#### Titre de niveau 5
+
+# De nouveau un titre de niveau 1
 
 C'est une première page.
 
 J'ajoute une ligne au fichier phad.
+
+### Les Environnements
+
+#### Dictionnaire (`dictionary`)
 
 dictionary/
 : Mon premier terme

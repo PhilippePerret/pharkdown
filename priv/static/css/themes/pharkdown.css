@@ -3,11 +3,20 @@ body {
 }
 
 /* --- TITRES --- */
+
 h1, h2, h3, h4, h5 {
   font-weight: normal;
+  margin-top: 4em;
 }
-h1 {font-size: 48pt;}
-h2 {font-size: 32pt;}
+h1 {
+  font-size: 48pt;
+}
+h2 {
+  font-size: 40pt;
+}
+h3 {
+  font-size: 32pt;
+}
 /* Environnement :dictionary */
 dl {
   /* border: 1px solid blue; */
