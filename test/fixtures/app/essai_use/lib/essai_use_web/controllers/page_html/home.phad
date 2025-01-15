@@ -1,8 +1,11 @@
 # Pharkdown (titre de niveau 1)
 
+`# Pharkdown (titre de niveau 1)`
+
 *Cette page doit permettre de voir tous les formatages en action. À mesure qu'on ajoute des traitements, on le reporte ici pour les voir en direct.*
 
 ## Titre de niveau 2
+`## Titre de niveau 2`
 
 ### Titre de niveau 3
 
@@ -29,3 +32,10 @@ dictionary/
 /dictionary
 
 Un paragraphe au-dessous.
+
+code/
+Une bloc de code à ne pas toucher du tout.
+Avec une *deuxième ligne* qui pourrait être
+en italic et même un [lien](path/to/route).
+Tous ces codes ne doivent pas avoir été touchés.
+/code

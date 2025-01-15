@@ -7,8 +7,8 @@ defmodule Pharkdown.Formatter do
   def formate(liste, options) when is_list(liste) do
     liste
     |> Enum.map(fn {type, data} -> 
-      IO.inspect(type, label: "Type du token")
-      IO.inspect(data, label: "Data du token")
+      # IO.inspect(type, label: "Type du token")
+      # IO.inspect(data, label: "Data du token")
       case type do
       :environment -> formate(data[:type], data, options)
       _ -> formate(type, data, options) 
@@ -321,6 +321,25 @@ defmodule Pharkdown.Formatter do
     |> String.replace(@regex_underscore, @remp_underscore)
   end
 
+  @doc """
+
+  ## Examples
+
+    iex> Pharkdown.Formatter.formate("[Un titre de lien](path/to/destination)", [])
+    "<a href=\\"path/to/destination\\">Un titre de lien</a>"
+
+    // Avec un protocole, on met toujours une tarkeg _blank
+    iex> Pharkdown.Formatter.formate("[Lien externe](http://www.vers/lien/externe)", [])
+    "<a href=\\"http://www.vers/lien/externe\\" target=\\"_blank\\">Lien externe</a>"
+
+    // Avec des paramètres, les ajoute en attributs
+    iex> Pharkdown.Formatter.formate("[lien stylé](path/to/lien|class=cssclass)", [])
+    "<a href=\\"path/to/lien\\" class=\\"cssclass\\">lien stylé</a>"
+
+
+  """
+  def __pour_le_doctest_de_la_fonction_href_links, do: nil
+
   @regex_links ~r/\[(?<title>.+)\]\((?<href>.+)(?:\|(?<params>.+))?\)/U
   defp formate_href_links(string, _options) do
     Regex.replace(@regex_links, string, fn _, title, href, params ->
@@ -335,8 +354,9 @@ defmodule Pharkdown.Formatter do
           |> Enum.map(fn [attr, val] -> "#{attr}=\"#{val}\"" end)
           |> (fn liste -> " " <> Enum.join(liste, " ") end).()
         end
+      target = String.starts_with?(href, "http") && " target=\"_blank\"" || ""
     
-      "<a href=\"#{String.trim(href)}\"#{attributes}>#{title}</a>"
+      "<a href=\"#{String.trim(href)}\"#{attributes}#{target}>#{title}</a>"
     end)
   end
 
