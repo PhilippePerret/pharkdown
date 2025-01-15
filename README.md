@@ -19,3 +19,8 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/pharkdown>.
 
+## Styles
+
+Pour voir les styles par défaut, il faut désactiver (ou ne pas installer — option `no-tail`) tailwind.css en ex-commentant les lignes du fichier `assets/css/app.css`
+
+On peut choisir ensuite son style {pas encore en fonction}.
