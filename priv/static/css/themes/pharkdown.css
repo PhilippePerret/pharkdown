@@ -1,0 +1,35 @@
+body {
+  font-size: 16pt;
+}
+
+/* --- TITRES --- */
+h1, h2, h3, h4, h5 {
+  font-weight: normal;
+}
+h1 {font-size: 48pt;}
+h2 {font-size: 32pt;}
+/* Environnement :dictionary */
+dl {
+  /* border: 1px solid blue; */
+  margin: 1rem 0;
+}
+dl dd {
+  padding-left: 8px;
+  border-left: 1px solid #999999;
+}
+dl dt {
+  font-family: Arial Hebrew, Arial, Helvetica, Geneva;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+dl dd {
+  margin-left: 1rem;
+  padding-top: 0.25rem;
+  font-size: 0.95em;
+}
+dl dt + dd {
+  margin-top: 0.4rem;
+}
+dl dd + dt {
+  margin-top: 0.75rem;
+}

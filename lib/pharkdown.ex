@@ -69,6 +69,34 @@ defmodule Pharkdown do
     end)
   end
 
+  def add_css_file_to_project() do
+    this_app = Mix.Project.config()[:app] # |> IO.inspect(label: "L'application est ")
+    app_folder = File.cwd!() # |> IO.inspect(label: "\nDOSSIER COURANT ?")
+    app_css_path = Path.join([app_folder, "assets", "css", "app.css"]) # |> IO.inspect(label: "Path to app.css cherché")
+    css_path = Path.join(Application.app_dir(:pharkdown, "priv/static/css"), "themes/pharkdown.css")
+
+    # Ligne à ajouter au fichier app.css du projet
+    import_line = """
+
+    /* For Pharkdown — You can choose an other theme */
+    @import \"#{css_path}\";
+    
+    """
+    # |> IO.inspect(label: "\nLine pour CSS à ajouter")
+
+    # Vérifie si la ligne est déjà présente
+    # message =
+      cond do 
+      !File.exists?(app_css_path) -> "Fichier app.css introuvable… (#{app_css_path})"
+      File.read!(app_css_path) |> String.contains?(import_line) -> "Code déjà présent dans le fichier."
+      true ->
+        File.write!(app_css_path, "#{import_line}\n", [:append])
+        "Ligne ajoutée à app.css : #{import_line}"
+      end    
+    # IO.puts message
+
+  end
+
   defmacro __using__(options) do
 
     path_folder_html = String.replace(__CALLER__.file, ~r/_controller\.ex$/, "_html")
@@ -84,6 +112,9 @@ defmodule Pharkdown do
   
       File.exists?(template_folder) || raise "Template folder not found: #{template_folder}"
   
+      # On met le fichier CSS
+      Pharkdown.add_css_file_to_project()
+
       defp check_and_update_phad_files do
         # IO.inspect("Vérification et génération des fichiers...")
         Pharkdown.phad_files_in_folder(unquote(template_folder))
