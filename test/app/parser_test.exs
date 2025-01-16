@@ -7,7 +7,7 @@ defmodule Pharkdown.ParserTest do
   doctest Pharkdown.Parser
 
   test "Environnement document" do
-    code    = "document/\nPremière ligne\nDeuxième ligne\n/document"
+    code    = "~document\nPremière ligne\nDeuxième ligne\ndocument~"
     expect  = [
       {
         :environment, 
@@ -25,7 +25,7 @@ defmodule Pharkdown.ParserTest do
   end
 
   test "Environnement avec clé réduite ('doc' pour 'document')" do
-    code    = "doc/\nPremière ligne\nDeuxième ligne\n/doc"
+    code    = "~doc\nPremière ligne\nDeuxième ligne\ndoc~"
     expect  = [
       {
         :environment, 
@@ -44,7 +44,7 @@ defmodule Pharkdown.ParserTest do
 
   # # C'est celui du doctest
   # test "Environnement document avec une phrase suivante" do
-  #   code = "document/\nPremière ligne\nDeuxième ligne\n/document\nAutre paragraphe"
+  #   code = "~document\nPremière ligne\nDeuxième ligne\ndocument~\nAutre paragraphe"
   #   actual = Parser.tokenize(code)
   #   expect = [
   #     {:environment, [content: "Première ligne\nDeuxième ligne", type: :document]},
@@ -130,9 +130,9 @@ defmodule Pharkdown.ParserTest do
   test "Liste avec un environnement" do
     code = """
     * Item 1
-    doc/
+    ~doc
     Mon document
-    /doc
+    doc~
     * Item 2
     """
     doc_env = {
@@ -160,9 +160,9 @@ defmodule Pharkdown.ParserTest do
   test "Liste avec environnement et indentation" do
     code = """
     * Item 1
-      doc/
+      ~doc
       Mon document
-      /doc
+      doc~
     * Item 2
     """
     doc_env = {:environment, [type: :document, content: [[type: :paragraph, content: "Mon document"]]]}
@@ -186,10 +186,10 @@ defmodule Pharkdown.ParserTest do
   test "Environnement dictionnaire (:dictionary)" do
     code = """
     Un paragraphe.
-    dictionary/
+    ~dictionary
     : Un terme à définir
     :: La définition de ce terme.
-    /dictionary
+    dictionary~
     """
 
     actual = Parser.parse(code)

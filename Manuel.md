@@ -58,6 +58,8 @@ Les guillemets droits (") sont automatiquement remplacés par des chevrons et le
 
 Noter que cela n'affecte en rien les codes mais seulement les textes (sauf dans les codes, où il faut penser à les utiliser directement).
 
+Si l'on veut forcer l'utilisation ponctuelle de guillemets droits, on peut forcer la marque avec `{{GL}}`.
+
 #### Retours à la ligne
 
 On peut forcer un simple retour à la ligne (`<br />` en HTML) en utilisant `\n`. Par exemple :
@@ -111,23 +113,24 @@ div#monDiv: C'est un div et pas un paragraphe.
 
 ## Les environnements
 
-Il existe des *environnements* par défaut qui permettent de mettre en forme le texte d'une certaine manière. C'est le cas par exemple pour du code ou un aspect document pour du texte.
+Il existe des *environnements* par défaut qui permettent de mettre en forme des blocs de texte d'une certaine manière. C'est le cas par exemple pour du code ou un aspect document pour du texte.
 
 Un environnement se trouve entre les marques :
 
 ~~~
-environnement/
+~environnement
 ...
-/environnement
+environnement~
 ~~~
 
 Ces environnements sont :
 
 ~~~
 document (ou 'doc')
-blockcode (ou 'code' ou 'bcode')
 dictionary (ou 'dict' ou 'dico' ou 'dictionnaire')
 ~~~
+
+> Voir le détail plus bas.
 
 À l'avenir, l'utilisateur pourra définir le traitement de ses propres environnements.
 
@@ -176,17 +179,17 @@ etc.
 
 Permet d'avoir des textes qui se présentent de cette manière, avec un terme et une définition.
 
-dico/
+~dico
 :  terme
 :: Définition
 :: Autre paragraphe définition
 :  autre terme
 :: .exergue: Définition dans le style exergue.
-/dico
+dico~
 
 … en les définissant ainsi :
 
-code/
+~~~
 dico/
 :  terme
 :: Définition
@@ -194,6 +197,17 @@ dico/
 :  autre terme
 :: .exergue: Définition dans le style exergue.
 /dico
-/code
+~~~
 
 Les classes concernées par les dictionnaires sont `dl` pour "dictionary list", `dt` pour "dictionary term" et `dd` pour "dictionary definition".
+
+### Environnement document
+
+~~~
+~document
+Un paragraphe de document.
+Un autre paragraphe de document.
+document~
+~~~
+
+{TODO: Décrire ce que cet environnement a de spécial…}

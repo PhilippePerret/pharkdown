@@ -9,11 +9,11 @@ defmodule Pharkdown.FormatterTest do
 
   test "un environnement blockcode n'est pas corrigé" do
     code = """
-    code/
+    ~~~
     Un *italique* non corrigé.
     Avec du `code`.
     Et un [lien](vers/cible)
-    /code
+    ~~~
     """
     actual = Pharkdown.Engine.compile_string(code)
     expect = """

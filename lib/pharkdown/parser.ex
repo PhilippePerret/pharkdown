@@ -3,15 +3,13 @@ defmodule Pharkdown.Parser do
   # alias Pharkdown.Formatter
 
   @known_environments [
-    "document", "doc", "blockcode", "bcode", "dictionary", "dico", "dict", "dictionnaire"
+    "document", "doc", "dictionary", "dico", "dict", "dictionnaire"
   ]
   @environment_substitution %{
-    "doc"   => "document",
-    "bcode" => "blockcode",
-    "code"  => "code",
-    "dico"  => "dictionary",
-    "dict"  => "dictionary",
-    "dictionnaire" => "dictionary",
+    "doc"           => "document",
+    "dico"          => "dictionary",
+    "dict"          => "dictionary",
+    "dictionnaire"  => "dictionary",
 
   }
 
@@ -75,7 +73,7 @@ defmodule Pharkdown.Parser do
 
     --- Environnements ---
 
-    iex> Pharkdown.Parser.tokenize("document/\\nPremière ligne\\nDeuxième ligne\\n/document\\nAutre paragraphe")
+    iex> Pharkdown.Parser.tokenize("~document\\nPremière ligne\\nDeuxième ligne\\ndocument~\\nAutre paragraphe")
     [
       {:environment, [
           type: :document, 
@@ -122,7 +120,7 @@ defmodule Pharkdown.Parser do
 
     // - Dictionnaire -
 
-    iex> Pharkdown.Parser.tokenize("Premier paragraphe\\ndictionary/\\n: un terme \\n:: Sa définition \\n/dictionary")
+    iex> Pharkdown.Parser.tokenize("Premier paragraphe\\n~dictionary\\n: un terme \\n:: Sa définition \\ndictionary~")
     [
       {:paragraph, [content: "Premier paragraphe"]},
       {:environment, [type: :dictionary, content: [
@@ -155,7 +153,7 @@ defmodule Pharkdown.Parser do
 
     - Ordre différent -
 
-    iex> Pharkdown.Parser.tokenize("document/\\nLa ligne\\n/document\\n## Le sous-titre")
+    iex> Pharkdown.Parser.tokenize("~document\\nLa ligne\\ndocument~\\n## Le sous-titre")
     [
       {:environment, [type: :document, content: [
         [type: :paragraph, content: "La ligne"]
@@ -197,18 +195,15 @@ defmodule Pharkdown.Parser do
   #
   @regex_titres ~r/^(\#{1,7}) (.+)$/m
   @regex_blockcode ~r/(~~~|```)([a-z]+\n)?(.+)\n\1/ms
-  @regex_known_environments ~r/^(#{Enum.join(@known_environments, "|")})\/\n(.+)\n\/\1$/ms
+  @regex_known_environments ~r/^\~(#{Enum.join(@known_environments, "|")})\n(.+)\n\1\~$/ms
 
   def tokenize(string, options \\ []) do
     collector = %{texte: string, tokens: [], options: options}
-    
     # IO.inspect(string, label: "\nSTRING AU DÉPART")
-    
     # note : toutes ces fonctions retourne +collector+
     collector
     |> scan_titres_in()
-    |> scan_blockcode_in()
-    |> scan_for_known_environments()
+    |> scan_for_known_environments(options)
     # Il faut scanner les listes après les environnements car des 
     # environnements peuvent se trouver dans les listes (cf. N001)
     # |> IO.inspect(label: "\nCOLLECTOR AVANT traitement des listes")
@@ -274,22 +269,6 @@ defmodule Pharkdown.Parser do
         add_to_collector(collector, :title, data, tout)
       end)
     end
-  end
-
-  defp scan_blockcode_in(collector) do
-    case Regex.scan(@regex_blockcode, collector.texte) do
-      nil -> collector
-      res -> Enum.reduce(res, collector, fn groupes, collector ->
-          [tout, _amorce, langage, contenu] = groupes
-  
-          # Données pour le token
-          data = [
-            content: String.trim(contenu), 
-            langage: String.trim(langage)
-          ]
-          add_to_collector(collector, :blockcode, data, tout)
-        end)
-      end
   end
 
   # Méthode qui va parser et tokeniser les listes qui se présentent
@@ -368,13 +347,77 @@ defmodule Pharkdown.Parser do
   #   {:type, [data]}
   #   etc.
   # ]
-  defp scan_for_known_environments(collector) do
+
+
+  @doc """
+  @private
+  ## Description
+
+    Fonction de détection et de parse des ENVIRONNEMENTS.
+
+  ## Environnements connus
+
+    // Bloc de code (comme Markdown)
+    iex> Pharkdown.Parser.parse("~~~\\nDu code\\nEt du code\\n~~~", [])
+    [
+      {:environment, [type: :blockcode, language: "", content: "Du code\\nEt du code"]}
+    ]
+
+    // Bloc de code (avec backsticks)
+    iex> Pharkdown.Parser.parse("```\\nDu code\\nEt du code\\n```", [])
+    [
+      {:environment, [type: :blockcode, language: "", content: "Du code\\nEt du code"]}
+    ]
+
+    // Bloc de code (avec langage)
+    iex> Pharkdown.Parser.parse("```elixir\\nDu code\\nEt du code\\n```", [])
+    [
+      {:environment, [type: :blockcode, language: "elixir", content: "Du code\\nEt du code"]}
+    ]
+
+    // Environnement document
+    iex> Pharkdown.Parser.parse("~document\\nUne ligne de document\\nUne autre ligne\\ndocument~", [])
+    [
+      {:environment, [type: :document, content: [
+        [type: :paragraph, content: "Une ligne de document"], 
+        [type: :paragraph, content: "Une autre ligne"]
+      ]]}
+    ]
+
+    // Environnement dictionnaire (dictionary)
+    iex> Pharkdown.Parser.parse("~dictionary\\n: Un terme\\n:: Une définition\\ndictionary~", [])
+    [
+      {:environment, [type: :dictionary, content: [
+        [type: :term, content: "Un terme"], [type: :definition, content: "Une définition"]
+      ]]}
+    ]
+
+  """
+  def scan_for_known_environments(collector, options) do
     Regex.scan(@regex_known_environments, collector.texte)
+    # |> IO.inspect(label: "\nAprès SCAN des ENVIRONNEMENTS connus")
     |> Enum.reduce(collector, &treat_known_environment/2)
+    |> scan_blockcode_in(options)
+  end
+
+  defp scan_blockcode_in(collector, _options) do
+    case Regex.scan(@regex_blockcode, collector.texte) do
+      nil -> collector
+      res -> Enum.reduce(res, collector, fn groupes, collector ->
+          [tout, _amorce, langage, contenu] = groupes
+          # Données token
+          data = [
+            type: :blockcode,
+            language: String.trim(langage),
+            content: String.trim(contenu) 
+          ]
+          add_to_collector(collector, :environment, data, tout)
+        end)
+      end
   end
 
   defp treat_known_environment(found, collector) do
-    IO.puts "-> treat_known_environment(\navec found:#{inspect found}\navec collector: #{inspect collector}\n)"
+    # IO.puts "-> treat_known_environment(\navec found:#{inspect found}\navec collector: #{inspect collector}\n)"
     [tout, env_name, content] = found
     env_name  = 
     (@environment_substitution[env_name] || env_name)

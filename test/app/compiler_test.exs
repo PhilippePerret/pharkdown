@@ -8,11 +8,11 @@ defmodule Pharkdown.CompilerTest do
 
   test "un environnement blockcode n'est pas corrigé" do
     code = """
-    code/
+    ```
     Un *italique* non corrigé.
     Avec du `code`.
     Et un [lien](vers/cible)
-    /code
+    ```
     """
     actual = Engine.compile_string(code)
     expect = """
@@ -23,6 +23,14 @@ defmodule Pharkdown.CompilerTest do
     </code></pre>
     """
     assert actual == expect
+  end
+
+  test "Environnement document" do
+    code = """
+    ~document
+    L'intérieur du document.
+    document~
+    """
   end
 
 end

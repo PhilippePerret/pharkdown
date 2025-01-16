@@ -457,7 +457,7 @@ defmodule Pharkdown.Formatter do
     remplace les \n par des <br /> (note : ce qui pourrait être fait
     avant, maintenant que le caractère n'est plus mis de côté, mais
 
-  ## Corrections effectuées
+  ## Corrections finales effectuées
 
     - \n -> <br >
     iex> Pharkdown.Formatter.very_last_correction("\\\\n", [])
