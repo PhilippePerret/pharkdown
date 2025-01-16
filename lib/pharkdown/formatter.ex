@@ -6,6 +6,7 @@ defmodule Pharkdown.Formatter do
   """
   def formate(liste, options) when is_list(liste) do
     liste
+    |> IO.inspect(label: "\nLISTE")
     |> Enum.map(fn {type, data} -> 
       # IO.inspect(type, label: "Type du token")
       # IO.inspect(data, label: "Data du token")
@@ -52,8 +53,10 @@ defmodule Pharkdown.Formatter do
   end
 
   def formate(:blockcode, data, _options) do
-    data[:lines]
-    |> Enum.join("\n")
+    "<pre><code lang={{LG}}#{data[:language]}{{GL}}>" <> (
+      data[:content]
+    ) <> "</code></pre>"
+    |> IO.inspect(label: "Retourné par formate(:blockcode ...)")
   end
 
   @doc """
@@ -98,6 +101,26 @@ defmodule Pharkdown.Formatter do
       formate_dict_element(par[:type], par[:content])
     end)
     |> Enum.join("")) <> "</dl>"
+  end
+
+  @doc """
+  @private
+
+  ## Description
+
+    Traitement de l'environnement document. Pour le moment, on ne 
+    fait que mettre en forme les paragraphes. plus tard, il y aura
+    certainement d'autres traitement, peut-être les formateurs de
+    texte.
+
+  """
+  def formate(:document, data, _options) do
+    "<section data-env={{GL}}document{{GL}} class={{GL}}document{{GL}}>" <> (
+      Enum.map(data[:content], fn item ->
+      "<div class={{GL}}p{{GL}}>#{item[:content]}</div>"
+      end)
+      |> Enum.join("")
+    ) <> "</section>"
   end
 
   # Formatage quelconque, non défini
