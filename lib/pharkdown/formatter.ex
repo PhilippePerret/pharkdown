@@ -49,7 +49,7 @@ defmodule Pharkdown.Formatter do
     iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon *simple* paragraphe !", id: "parWithItal"])
     "<div id=\\"parWithItal\\" class=\\"p\\">Mon <em>simple</em> <nowrap>paragraphe !</nowrap></div>"
     
-    """
+  """
   def formate_line(item, options \\ []) do
     tag       = item[:tag] || "div"
     maybe_id  = item[:id] && " id=\"#{item[:id]}\"" || ""
@@ -164,17 +164,7 @@ defmodule Pharkdown.Formatter do
     |> Enum.join("")) <> "</dl>"
   end
 
-  @doc """
-  @private
-
-  ## Description
-
-    Traitement de l'environnement document. Pour le moment, on ne 
-    fait que mettre en forme les paragraphes. plus tard, il y aura
-    certainement d'autres traitement, peut-être les formateurs de
-    texte.
-
-  """
+ 
   def formate(:document, data, options) do
     "<section data-env={{GL}}document{{GL}} class={{GL}}document{{GL}}>" <> (
       Enum.map(data[:content], fn item ->
@@ -334,6 +324,18 @@ defmodule Pharkdown.Formatter do
   """
   def __doctests_pour_formate_texte_generale, do: nil
 
+  @doc """
+  @private
+
+  ## Description
+
+    Traitement de l'environnement document. Pour le moment, on ne 
+    fait que mettre en forme les paragraphes. plus tard, il y aura
+    certainement d'autres traitement, peut-être les formateurs de
+    texte.
+
+  """
+  def doctests_de_formate_document, do: nil
 
   @doc """
   Tests pour la méthode formate/3 pour un dictionnaire

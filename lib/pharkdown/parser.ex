@@ -306,7 +306,7 @@ defmodule Pharkdown.Parser do
   (?:\.(?<css>[a-z0-9_\-\.]+))?  # des classes CSS
   \:
   (?<content>.+)$/Ux
-  def parse_line([type: :paragraph, content: content] = item, options \\ []) do
+  def parse_line([type: :paragraph, content: content] = item, _options \\ []) do
     # |> IO.inspect(label: "\nSCAN de #{inspect content}")
     case Regex.named_captures(@reg_paragraph_line, content) do
     nil -> item
