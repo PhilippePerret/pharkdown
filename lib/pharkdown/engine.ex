@@ -19,14 +19,32 @@ defmodule Pharkdown.Engine do
   @impl true
   def compile(path, options) do
 
-    content = 
-      File.read!(path)
-      |> Loader.load_external_contents(options)
+    content = File.read!(path)
+
+    # Pour informations (débuggage et erreur)
+    options = [ {:path, path}, {:fname, Path.basename(path)} | options]
 
     quote do
       #                                                                        cf. N001
-      unquote(content |> Parser.parse(options) |> Formatter.formate(options) |> Formatter.formate(options))
+      # unquote(content |> Parser.parse(options) |> Formatter.formate(options) |> Formatter.formate(options))
+      unquote(compile_string(content, options))
     end
+  end
+
+  @doc """
+  Transforme le texte +string+, formaté en Pharkdown, en un texte 
+  HTML conforme.
+  """
+  def compile_string(string, options \\ []) do
+    string
+    |> Loader.load_external_contents(options)
+    |> IO.inspect(label: IO.ANSI.red() <> "\nAfter Loader.load_external_contents(...)")
+    |> Parser.parse(options)
+    |> IO.inspect(label: IO.ANSI.red() <> "\nAfter Parser.parse(...)")
+    |> Formatter.formate(options)
+    |> IO.inspect(label: IO.ANSI.red() <> "\nAfter Premier Formatter.formate(...)")
+    |> Formatter.formate(options) # cf. N001
+    |> IO.inspect(label: IO.ANSI.red() <> "\nAfter Second Formatter.formate(...)")
   end
 
   # Crée le fichier +html_path+ à partir du fichier +phad_path+

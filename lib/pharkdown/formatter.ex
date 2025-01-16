@@ -1,7 +1,7 @@
 defmodule Pharkdown.Formatter do
 
   @doc """
-  Fonction principale qui reçoit le découpage (donc les tokens) de la fonction
+  Fonction principale qui reçoit le découpage en tokens de la fonction
   Pharkdown.Parser.parse et le met en forme.
   """
   def formate(liste, options) when is_list(liste) do
@@ -44,7 +44,7 @@ defmodule Pharkdown.Formatter do
 
   def formate(:paragraph, data, _options) do
     # TODO Ajouter les classes, etc.
-    "<p>" <> data[:content] <> "</p>"
+    "<div class={{GL}}p{{GL}}>" <> data[:content] <> "</div>"
   end
 
   def formate(:title, data, _options) do
@@ -448,16 +448,36 @@ defmodule Pharkdown.Formatter do
     end)
   end
 
-  # Les toutes dernières corrections. C'est ici par exemple qu'on
-  # remplace les \n par des <br /> (note : ce qui pourrait être fait
-  # avant, maintenant que le caractère n'est plus mis de côté, mais
-  # bon…)
+  @doc """
+  @private
+
+  ## Description
+  
+    Les toutes dernières corrections. C'est ici par exemple qu'on
+    remplace les \n par des <br /> (note : ce qui pourrait être fait
+    avant, maintenant que le caractère n'est plus mis de côté, mais
+
+  ## Corrections effectuées
+
+    - \n -> <br >
+    iex> Pharkdown.Formatter.very_last_correction("\\\\n", [])
+    "<br />"
+
+    - {{GL}} -> "
+    iex> Pharkdown.Formatter.very_last_correction("class={{GL}}css{{GL}}", [])
+    "class=\\"css\\""
+
+  bon…)
+  """
   @regex_returns ~r/( +)?\\n( +)?/    ; @remp_returns "<br />"
-  defp very_last_correction(string, _options) do
+  @regex_protected_guils ~r/\{\{GL\}\}/ ; @remp_protected_guils "\""
+  def very_last_correction(string, _options) do
     string
     |> String.replace(@regex_returns, @remp_returns)
+    |> String.replace(@regex_protected_guils, @remp_protected_guils)
   end
 
+  
   # ------------ SOUS MÉTHODES ---------------
 
   defp change_level_in_list(accu, 0, _tag), do: accu

@@ -17,7 +17,17 @@ h2 {
 h3 {
   font-size: 32pt;
 }
-/* Environnement :dictionary */
+
+/* === Paragraphes === */
+
+div.p {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+
+/* === Environnement :dictionary === */
+
 dl {
   /* border: 1px solid blue; */
   margin: 1rem 0;

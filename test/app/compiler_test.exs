@@ -1,11 +1,10 @@
-defmodule Pharkdown.FormatterTest do
+defmodule Pharkdown.CompilerTest do
   
   use ExUnit.Case
 
   alias Pharkdown.Engine
-  # alias Pharkdown.Formatter
   
-  doctest Pharkdown.Formatter
+  doctest Engine
 
   test "un environnement blockcode n'est pas corrigé" do
     code = """
@@ -15,7 +14,7 @@ defmodule Pharkdown.FormatterTest do
     Et un [lien](vers/cible)
     /code
     """
-    actual = Pharkdown.Engine.compile_string(code)
+    actual = Engine.compile_string(code)
     expect = """
     <pre><code>
     Un *italique* non corrigé.
