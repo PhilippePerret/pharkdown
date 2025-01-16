@@ -19,7 +19,8 @@ defmodule Pharkdown.Parser do
   @regex_balise_token_multi ~r/^TOKEN([0-9]+)NEKOT$/m
 
   @doc """
-  Parse le code +string+
+  Parse le code +string+ pour pouvoir le tokenizer, c'est-à-dire pour
+  pouvoir le découper en environnements, listes et paragraphes.
 
 
   NOTES
@@ -254,6 +255,72 @@ defmodule Pharkdown.Parser do
     })
   end
 
+  @doc """
+  ## Description
+
+    Méthode qui parse une ligne de type paragraphe, comme dans un 
+    environnement document par exemple pour en tirer, dans son AMORCE
+    les éventuels tag, identifiant et classes CSS.
+
+  ## Retour
+
+    Retourne l'item auquel on a pu ajouter :tag, :class et :id
+    [type: :paragraphe, content: <contenu textuel>, tag: String, class: [liste], id: String]
+    Note : ce retour peut être directement reçu par Pharkdown.Formatter.formate_line
+
+  ## Examples
+
+    // Simple
+    iex> Pharkdown.Parser.parse_line([type: :paragraph, content: "Le paragraphe"])
+    [type: :paragraph, content: "Le paragraphe"]
+    
+    // Avec classe CSS
+    iex> Pharkdown.Parser.parse_line([type: :paragraph, content: ".moncss: Le paragraphe"])
+    [type: :paragraph, content: "Le paragraphe", class: ["moncss"]]
+
+    // Avec deux classes CSS
+    iex> Pharkdown.Parser.parse_line([type: :paragraph, content: ".moncss.autrecss: Le paragraphe"])
+    [type: :paragraph, content: "Le paragraphe", class: ["moncss", "autrecss"]]
+
+    // Avec identifiant 
+    iex> Pharkdown.Parser.parse_line([type: :paragraph, content: "#monPar1: Le paragraphe"])
+    [type: :paragraph, content: "Le paragraphe", id: "monPar1"]
+
+    // Avec tag
+    iex> Pharkdown.Parser.parse_line([type: :paragraph, content: "matag: Le paragraphe"])
+    [type: :paragraph, content: "Le paragraphe", tag: "matag"]
+
+    // Avec class, id et tag
+    iex> Pharkdown.Parser.parse_line([type: :paragraph, content: "matag#sonId.css.css3: Le paragraphe"])
+    [type: :paragraph, content: "Le paragraphe", tag: "matag", id: "sonId", class: ["css", "css3"]]
+  
+    // Mal formaté, Id, après Class
+    iex> Pharkdown.Parser.parse_line([type: :paragraph, content: ".css#id: Le paragraphe"])
+    [type: :paragraph, content: ".css#id: Le paragraphe"]
+
+  """
+  @reg_paragraph_line ~r/
+  ^
+  (?<tag>[a-z]+)?  # soit un tag -- forcément au début
+  (?:\#(?<id>[a-zA-Z0-9_\-]+))? # un identifiant
+  (?:\.(?<css>[a-z0-9_\-\.]+))?  # des classes CSS
+  \:
+  (?<content>.+)$/Ux
+  def parse_line([type: :paragraph, content: content] = item, options \\ []) do
+    # |> IO.inspect(label: "\nSCAN de #{inspect content}")
+    case Regex.named_captures(@reg_paragraph_line, content) do
+    nil -> item
+    %{"tag" => tag, "id" => id, "css" => css, "content" => content} -> 
+      # On les entre dans l'ordre inverse de l'ordre voulu à la fin
+      item = []
+      item = css != ""  && [{:class, String.split(css, ".")} | item] || item
+      item = id  != ""  && [{:id, id}   | item] || item
+      item = tag != ""  && [{:tag, tag} | item] || item
+      item = [{:content, String.trim(content)} | item]
+      [{:type, :paragraph} | item]
+    end
+  end
+
 
   defp scan_titres_in(collector) do
     case Regex.scan(@regex_titres, collector.texte) do
@@ -455,7 +522,7 @@ defmodule Pharkdown.Parser do
   end
   # Traitement du contenu d'un environnement de type :document
   def treat_content_by_env(:document, content, collector) do
-    IO.puts "-> treat_content_by_env(\navec :\n:document, \navec content: #{inspect content}\navec collector: #{inspect collector}\n)"
+    # IO.puts "-> treat_content_by_env(\navec :\n:document, \navec content: #{inspect content}\navec collector: #{inspect collector}\n)"
     content
     |> String.split("\n")
     |> Enum.reduce(collector, fn line, accu -> 

@@ -1,5 +1,66 @@
 defmodule Pharkdown.Formatter do
 
+  alias Pharkdown.Parser
+
+  @doc """
+
+  Formatage d'une simple ligne (par exemple un paragraphe régulier).
+  On formate aussi bien l'intérieur de la balise (id, class, tag 
+  même) que le contenu (italiques, liens, etc.).
+
+  ## Description
+
+    La méthode est le plus souvent appelée à la suite de 
+    Parser.parse_line/2 qui tranforme un paragraphe en quelque chose
+    comme [type: :paragraph, content: "<contenu>", tag: "tag", 
+    id: "id", class: ["liste", "classes", "CSS"]]
+
+    Elle retourne le texte mis en forme pour inscription dans le 
+    document de la page. Elle corrige donc aussi tout ce qui peut
+    être corrigé dans un texte, italiques, liens, exposants, etc.
+
+  ## Examples
+
+    // Simple paragraphe
+    iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe."])
+    "<div class=\\"p\\">Mon simple paragraphe.</div>"
+
+    // Paragraphe avec 1 classe css
+    iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", class: ["maClasse"]])
+    "<div class=\\"p maClasse\\">Mon simple paragraphe.</div>"
+  
+    // Paragraphe avec 2 classes css
+    iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", class: ["maClasse", "autre-classe"]])
+    "<div class=\\"p maClasse autre-classe\\">Mon simple paragraphe.</div>"
+  
+    // Paragraphe avec identifiant
+    iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", id: "monPar"])
+    "<div id=\\"monPar\\" class=\\"p\\">Mon simple paragraphe.</div>"
+
+    // Paragraphe avec tag spéciale
+    iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", tag: "latag"])
+    "<latag class=\\"p\\">Mon simple paragraphe.</latag>"
+
+    // Paragraphe avec tag spéciale, id et classes css
+    iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", tag: "latag", id: "monPar", class: ["class1", "class2"]])
+    "<latag id=\\"monPar\\" class=\\"p class1 class2\\">Mon simple paragraphe.</latag>"
+
+    // Test avec de l'italique et de l'insécable
+    iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon *simple* paragraphe !", id: "parWithItal"])
+    "<div id=\\"parWithItal\\" class=\\"p\\">Mon <em>simple</em> <nowrap>paragraphe !</nowrap></div>"
+    
+    """
+  def formate_line(item, options \\ []) do
+    tag       = item[:tag] || "div"
+    maybe_id  = item[:id] && " id=\"#{item[:id]}\"" || ""
+    maybe_css = item[:class] && " #{Enum.join(item[:class]," ")}" || ""
+
+    # On corrige le contenu avec la grande fonction de correction
+    contenu = formate(item[:content], options)
+
+    "<#{tag}#{maybe_id} class=\"p#{maybe_css}\">#{contenu}</#{tag}>"
+  end
+
   @doc """
   Fonction principale qui reçoit le découpage en tokens de la fonction
   Pharkdown.Parser.parse et le met en forme.
@@ -40,12 +101,12 @@ defmodule Pharkdown.Formatter do
     # --- /Transformations ---
     # On remet tous les caractères échappés
     |> replace_codes_beside(codes_beside, options)
-    |> very_last_correction(options)
   end
 
-  def formate(:paragraph, data, _options) do
-    # TODO Ajouter les classes, etc.
-    "<div class={{GL}}p{{GL}}>" <> data[:content] <> "</div>"
+  def formate(:paragraph, data, options) do
+    [{:type, :paragraph} | data]
+    |> Parser.parse_line(options)
+    |> formate_line(options)
   end
 
   def formate(:title, data, _options) do
@@ -53,9 +114,9 @@ defmodule Pharkdown.Formatter do
   end
 
   def formate(:blockcode, data, _options) do
-    "<pre><code lang={{LG}}#{data[:language]}{{GL}}>" <> (
+    "<pre><code lang={{GL}}#{data[:language]}{{GL}}>\n" <> (
       data[:content]
-    ) <> "</code></pre>"
+    ) <> "\n</code></pre>"
     |> IO.inspect(label: "Retourné par formate(:blockcode ...)")
   end
 
@@ -114,10 +175,12 @@ defmodule Pharkdown.Formatter do
     texte.
 
   """
-  def formate(:document, data, _options) do
+  def formate(:document, data, options) do
     "<section data-env={{GL}}document{{GL}} class={{GL}}document{{GL}}>" <> (
       Enum.map(data[:content], fn item ->
-      "<div class={{GL}}p{{GL}}>#{item[:content]}</div>"
+        item 
+        |> Parser.parse_line(options) 
+        |> formate_line(options)
       end)
       |> Enum.join("")
     ) <> "</section>"
@@ -140,7 +203,7 @@ defmodule Pharkdown.Formatter do
     // --- Conservation des échappés ---
 
     iex> Pharkdown.Formatter.formate("\\\—un texte\\\— un \\\\*un texte\\\\* et \\\\n pour voir.", [])
-    "—un texte— un *un texte* et<br />pour voir."
+    "—un texte— un *un texte* et \\\\n pour voir."
 
     // --- Stylisation générale ---
 
@@ -148,7 +211,7 @@ defmodule Pharkdown.Formatter do
     iex> Pharkdown.Formatter.formate("*italic* et *autre chose*", [])
     "<em>italic</em> et <em>autre chose</em>"
 
-    // avec parasite
+    // avec parasite (caractère échappé à ne pas considérer)
     iex>  Pharkdown.Formatter.formate("*ita\\\\*lic* et *autre chose*", [])
     "<em>ita*lic</em> et <em>autre chose</em>"
 
@@ -172,6 +235,7 @@ defmodule Pharkdown.Formatter do
     iex>  Pharkdown.Formatter.formate("__souligné\\\\___ et __très\\\\_\\\\_souligné__", [])
     "<u>souligné_</u> et <u>très__souligné</u>"
 
+    // Lien
     iex> Pharkdown.Formatter.formate("[Mon lien](/vers/un/path)", [])
     "<a href=\\"/vers/un/path\\">Mon lien</a>"
     
@@ -179,10 +243,11 @@ defmodule Pharkdown.Formatter do
     iex> Pharkdown.Formatter.formate("[Mon\\\\]\\\\(lien](/vers/un/path)", [])
     "<a href=\\"/vers/un/path\\">Mon](lien</a>"
     
-    // Double
+    // Double lien
     iex> Pharkdown.Formatter.formate("[Mon lien](/vers/un/path) et [autre lien](path/to)", [])
     "<a href=\\"/vers/un/path\\">Mon lien</a> et <a href=\\"path/to\\">autre lien</a>"
 
+    // Lien avec style
     iex> Pharkdown.Formatter.formate("[Mon autre lien](/vers/un/autre|class=exergue, style=font-size: 12pt)", [])
     "<a href=\\"/vers/un/autre\\" class=\\"exergue\\" style=\\"font-size: 12pt\\">Mon autre lien</a>"
 
@@ -195,15 +260,15 @@ defmodule Pharkdown.Formatter do
     iex> Pharkdown.Formatter.formate("1\\\\^er et 2\\\\^e", [])
     "1^er et 2^e"
 
-    // sans correction 
+    // Options : sans correction
     iex> Pharkdown.Formatter.formate("1^ere", [{:correct, false}])
     "1<sup>ere</sup>"
 
-    // automatique
+    // Corrections automatiques
     iex> Pharkdown.Formatter.formate("XVe XIXe Xeme IXème 2e 1er 1re 1ere 1ère 456e", [])
     "XV<sup>e</sup> XIX<sup>e</sup> X<sup>e</sup> IX<sup>e</sup> 2<sup>e</sup> 1<sup>er</sup> 1<sup>re</sup> 1<sup>re</sup> 1<sup>re</sup> 456<sup>e</sup>"
 
-    // sans correction
+    // Options : sans correction
     iex> Pharkdown.Formatter.formate("XVe XIXe 1er 456e", [{:correct, false}])
     "XVe XIXe 1er 456e"
 
@@ -215,7 +280,7 @@ defmodule Pharkdown.Formatter do
     iex> Pharkdown.Formatter.formate("<.composant *composant non touché* />", [])
     "<.composant *composant non touché* />"
 
-    // - code sur plusieurs lignes -
+    // - code EEX sur plusieurs lignes -
     iex> Pharkdown.Formatter.formate("<%= if *condition* do %>\\n<p>Ce paragraphe __isolé__</p>\\n<% end %>", [])
     "<%= if *condition* do %>\\n<p>Ce paragraphe <u>isolé</u></p>\\n<% end %>"
 
@@ -495,9 +560,11 @@ defmodule Pharkdown.Formatter do
   @regex_returns ~r/( +)?\\n( +)?/    ; @remp_returns "<br />"
   @regex_protected_guils ~r/\{\{GL\}\}/ ; @remp_protected_guils "\""
   def very_last_correction(string, _options) do
+    # IO.inspect(string, label: "[very_last_correction] String au début")
     string
     |> String.replace(@regex_returns, @remp_returns)
     |> String.replace(@regex_protected_guils, @remp_protected_guils)
+    # |> IO.inspect(label: "[very_last_correction] String à la fin")
   end
 
   

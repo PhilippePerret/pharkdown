@@ -13,9 +13,9 @@ defmodule PharkdownTest do
     """
     actual = Parser.parse(code)
     expect = [
-      [:paragraph, [content: "Un premier paragraphe"]],
-      [:paragraph, [content: "*Une ligne complètement en italiques*"]],
-      [:paragraph, [content: "Un autre paragraphe."]]
+      {:paragraph, [content: "Un premier paragraphe"]},
+      {:paragraph, [content: "*Une ligne complètement en italiques*"]},
+      {:paragraph, [content: "Un autre paragraphe."]}
     ]
     assert actual == expect
 

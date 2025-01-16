@@ -17,13 +17,13 @@ defmodule Pharkdown.FormatterTest do
     """
     actual = Pharkdown.Engine.compile_string(code)
     expect = """
-    <pre><code>
+    <pre><code lang="">
     Un *italique* non corrigé.
     Avec du `code`.
     Et un [lien](vers/cible)
     </code></pre>
     """
-    assert actual == expect
+    assert actual == String.trim(expect)
   end
 
 end

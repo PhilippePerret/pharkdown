@@ -5,16 +5,11 @@ defmodule Pharkdown.Engine do
 
   @behaviour Phoenix.Template.Engine
 
-  alias Pharkdown.Parser
-  alias Pharkdown.Formatter
-  alias Pharkdown.Loader
+  alias Pharkdown.{Loader, Parser, Formatter}
 
   @doc """
-
-  NOTES
-    N001
-      La première Formater.formate/2 reçoit une liste (de tokens) la 
-      deuxième reçoit le string produit par la première.
+  Fonction principale, requise, pour produire le code AST permettant
+  de rendre la page.
   """
   @impl true
   def compile(path, options) do
@@ -38,14 +33,16 @@ defmodule Pharkdown.Engine do
   def compile_string(string, options \\ []) do
     string
     |> Loader.load_external_contents(options)
-    |> IO.inspect(label: IO.ANSI.red() <> "\nAfter Loader.load_external_contents(...)")
+    # |> IO.inspect(label:  titre_ex("After Loader.load_external_contents/2"))
     |> Parser.parse(options)
-    |> IO.inspect(label: IO.ANSI.red() <> "\nAfter Parser.parse(...)")
+    |> IO.inspect(label: titre_ex("After Parser.parse/2"))
     |> Formatter.formate(options)
-    |> IO.inspect(label: IO.ANSI.red() <> "\nAfter Premier Formatter.formate(...)")
-    |> Formatter.formate(options) # cf. N001
-    |> IO.inspect(label: IO.ANSI.red() <> "\nAfter Second Formatter.formate(...)")
+    |> IO.inspect(label: titre_ex("After Formatter.formate/2"))
+    |> Formatter.very_last_correction(options)
+    # |> IO.inspect(label: titre_ex("After Formatter.very_last_correction/2"))
   end
+
+  defp titre_ex(str), do: IO.ANSI.green() <> "\n#{str}\n" <> IO.ANSI.reset()
 
   # Crée le fichier +html_path+ à partir du fichier +phad_path+
   def compile_file(phad_path, html_path, phad_name) do

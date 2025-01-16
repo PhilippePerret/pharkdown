@@ -19,14 +19,14 @@ defmodule Pharkdown.CompilerTest do
     actual = Engine.compile_string(code)
     expect = """
     <div class="p">Un paragraphe avant.</div>
-    <pre><code>
+    <pre><code lang="">
     Un *italique* non corrigé.
     Avec du `code`.
     Et un [lien](vers/cible)
     </code></pre>
     <div class="p">Un paragraphe après.</div>
     """
-    assert actual == expect
+    assert actual == String.trim(expect)
   end
 
   test "L'intérieur d'un environnement document est corrigé" do
@@ -40,12 +40,12 @@ defmodule Pharkdown.CompilerTest do
     actual = Engine.compile_string(code)
     expect = """
     <section data-env="document" class="document">
-    <div class="p">L'intérieur du document <em>corrigé</em>.</div>
+    <div class="p">L’intérieur du document <em>corrigé</em>.</div>
     <div class="p">Même les <a href="path/to/ca.html">liens</a>.</div>
     <div class="p css">Le paragraphe stylisé.</div>
     </section>
     """
-    assert actual == expect
+    assert actual == String.replace(expect, "\n", "")
   end
 
 end
