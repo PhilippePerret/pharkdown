@@ -24,11 +24,11 @@ J'ajoute une ligne au fichier phad.
 #### Dictionnaire (`dictionary`)
 
 ~dictionary
-: Mon premier terme
-:: C'est ça définition qui suit, exactement.
-: Un autre terme aussi pour voir
-:: C'est le premier paragraphe de définition.
-:: Deuxième paragraphe de définition.
+- Mon premier terme
+C'est ça définition qui suit, exactement.
+- Un autre terme aussi pour voir
+C'est le premier paragraphe de définition.
+Deuxième paragraphe de définition.
 dictionary~
 
 Un paragraphe au-dessous.

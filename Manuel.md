@@ -180,26 +180,27 @@ etc.
 Permet d'avoir des textes qui se présentent de cette manière, avec un terme et une définition.
 
 ~dico
-:  terme
-:: Définition
-:: Autre paragraphe définition
-:  autre terme
-:: .exergue: Définition dans le style exergue.
+:Terme
+Définition
+Autre paragraphe définition
+:Autre terme
+.exergue: Définition dans le style exergue.
 dico~
 
 … en les définissant ainsi :
 
 ~~~
-dico/
-:  terme
-:: Définition
-:: Autre paragraphe définition
-:  autre terme
-:: .exergue: Définition dans le style exergue.
-/dico
+~dico
+:Terme
+Définition
+Autre paragraphe définition
+:Autre terme
+.exergue: Définition dans le style exergue.
+dico~
 ~~~
 
-Les classes concernées par les dictionnaires sont `dl` pour "dictionary list", `dt` pour "dictionary term" et `dd` pour "dictionary definition".
+#### Classes CSS dans les thèmes
+`dl` (liste de dictionnaire), `dt` (terme), `dd` (définition).
 
 ### Environnement document
 

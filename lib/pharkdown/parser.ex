@@ -119,17 +119,6 @@ defmodule Pharkdown.Parser do
       }
     ]
 
-    // - Dictionnaire -
-
-    iex> Pharkdown.Parser.tokenize("Premier paragraphe\\n~dictionary\\n: un terme \\n:: Sa définition \\ndictionary~")
-    [
-      {:paragraph, [content: "Premier paragraphe"]},
-      {:environment, [type: :dictionary, content: [
-        [type: :term, content: "un terme"],
-        [type: :definition, content: "Sa définition"]
-      ]]}
-    ]
-
     # --- Liens ---
     # Non, c'est fait sur tout le texte à la fin.
 
@@ -442,23 +431,6 @@ defmodule Pharkdown.Parser do
       {:environment, [type: :blockcode, language: "elixir", content: "Du code\\nEt du code"]}
     ]
 
-    // Environnement document
-    iex> Pharkdown.Parser.parse("~document\\nUne ligne de document\\nUne autre ligne\\ndocument~", [])
-    [
-      {:environment, [type: :document, content: [
-        [type: :paragraph, content: "Une ligne de document"], 
-        [type: :paragraph, content: "Une autre ligne"]
-      ]]}
-    ]
-
-    // Environnement dictionnaire (dictionary)
-    iex> Pharkdown.Parser.parse("~dictionary\\n: Un terme\\n:: Une définition\\ndictionary~", [])
-    [
-      {:environment, [type: :dictionary, content: [
-        [type: :term, content: "Un terme"], [type: :definition, content: "Une définition"]
-      ]]}
-    ]
-
   """
   def scan_for_known_environments(collector, options) do
     Regex.scan(@regex_known_environments, collector.texte)
@@ -505,6 +477,19 @@ defmodule Pharkdown.Parser do
   @doc """
   Traitement du contenu d'un dictionnaire
   Le renvoie sous forme de liste de tokens
+
+  # Examples 
+
+    iex> Pharkdown.Parser.parse("~dictionary\\n:Un terme\\nUne définition\\ndictionary~", [])
+    [
+      {:environment, [
+        type: :dictionary,
+        content: [
+          [type: :term, content: "Un terme"],
+          [type: :definition, content: "Une définition"]
+        ]
+      ]}
+    ]
   """
   def treat_content_by_env(:dictionary, content, collector) do
     content
@@ -512,15 +497,28 @@ defmodule Pharkdown.Parser do
     |> Enum.reduce(collector, fn line, accu -> 
       line = String.trim(line)
       cond do
-      String.starts_with?(line, ": ")  ->
-        add_content_to_env_content(String.slice(line, 2..-1//1), :term, accu)
-      String.starts_with?(line, ":: ") -> 
-        add_content_to_env_content(String.slice(line, 3..-1//1), :definition, accu)
-      true -> raise "Ligne de dictionnaire mal formatée : #{inspect line}. Devrait commencer par ': ' (nouveau terme) ou ':: ' (nouveau pargraphe de définition)."
+      String.starts_with?(line, ":")  ->
+        add_content_to_env_content(String.slice(line, 1..-1//1) |> String.trim(), :term, accu)
+      true -> 
+        add_content_to_env_content(String.trim(line), :definition, accu)
       end
     end)
   end
-  # Traitement du contenu d'un environnement de type :document
+
+  @doc """
+  ## Traitement d'un environnement de type :document
+
+  ## Examples
+
+    iex> Pharkdown.Parser.parse("~document\\nUne ligne de document\\nUne autre ligne\\ndocument~", [])
+    [
+      {:environment, [type: :document, content: [
+        [type: :paragraph, content: "Une ligne de document"], 
+        [type: :paragraph, content: "Une autre ligne"]
+      ]]}
+    ]
+
+  """
   def treat_content_by_env(:document, content, collector) do
     # IO.puts "-> treat_content_by_env(\navec :\n:document, \navec content: #{inspect content}\navec collector: #{inspect collector}\n)"
     content
@@ -531,10 +529,13 @@ defmodule Pharkdown.Parser do
       |> add_content_to_env_content(:paragraph, accu) # => accumulateur
     end)
   end
-  # Par défaut
-  def treat_content_by_env(_envname, _content, coll), do: coll
 
 
+  # Non trouvé
+  def treat_content_by_env(_envname, _content, coll) do
+    raise "L'environnement #{inspect envname} est inconnu."
+    coll
+  end
 
   defp add_content_to_env_content(content, type, accu) do
     # IO.puts "-> add_content_to_env_content(\navec content: #{inspect content}\navec type: #{inspect type}\navec collector: #{inspect accu}\n)"
