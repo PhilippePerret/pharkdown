@@ -4,6 +4,8 @@ defmodule Pharkdown.FormatterTest do
 
   alias Pharkdown.Engine
   # alias Pharkdown.Formatter
+
+  alias Transformer, as: T
   
   doctest Pharkdown.Formatter
 

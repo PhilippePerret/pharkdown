@@ -35,9 +35,9 @@ defmodule Pharkdown.Engine do
     |> Loader.load_external_contents(options)
     # |> IO.inspect(label:  titre_ex("After Loader.load_external_contents/2"))
     |> Parser.parse(options)
-    |> IO.inspect(label: titre_ex("After Parser.parse/2"))
+    # |> IO.inspect(label: titre_ex("After Parser.parse/2"))
     |> Formatter.formate(options)
-    |> IO.inspect(label: titre_ex("After Formatter.formate/2"))
+    # |> IO.inspect(label: titre_ex("After Formatter.formate/2"))
     |> Formatter.very_last_correction(options)
     # |> IO.inspect(label: titre_ex("After Formatter.very_last_correction/2"))
   end

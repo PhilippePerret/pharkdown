@@ -20,4 +20,22 @@ defmodule PharkdownTest do
     assert actual == expect
 
   end
+
+  describe "Sans l'option :smarties" do
+    test "les guillemets ne se corrigent pas" do
+      # Ils se corrigent en temps normal
+      code = "Des \"guillemets\" !"
+      actual = Pharkdown.Engine.compile_string(code)
+      expect = "<div class=\"p\">Des <nowrap>« guillemets » !</nowrap>"
+      assert actual == expect
+
+      Application.put_env(:pharkdown, :options, [{:smarties, false}])
+      # Ils ne se corrigent plus
+      code = "Des \"guillemets\" !"
+      actual = Pharkdown.Engine.compile_string(code)
+      expect = "<div class=\"p\">Des <nowrap>\"guillemets\" !</nowrap>"
+      assert actual == expect
+
+    end
+  end
 end

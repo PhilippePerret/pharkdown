@@ -532,8 +532,8 @@ defmodule Pharkdown.Parser do
 
 
   # Non trouvé
-  def treat_content_by_env(_envname, _content, coll) do
-    raise "L'environnement #{inspect envname} est inconnu."
+  def treat_content_by_env(envname, _content, coll) do
+    IO.puts "Environnement inconnu : #{inspect envname}"
     coll
   end
 

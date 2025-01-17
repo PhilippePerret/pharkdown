@@ -47,7 +47,7 @@ defmodule Pharkdown.Formatter do
 
     // Test avec de l'italique et de l'insécable
     iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon *simple* paragraphe !", id: "parWithItal"])
-    "<div id=\\"parWithItal\\" class=\\"p\\">Mon <em>simple</em> <nowrap>paragraphe !</nowrap></div>"
+    "<div id=\\"parWithItal\\" class=\\"p\\">Mon <em>simple</em> <nowrap>paragraphe&nbsp;!</nowrap></div>"
     
   """
   def formate_line(item, options \\ []) do
@@ -67,7 +67,7 @@ defmodule Pharkdown.Formatter do
   """
   def formate(liste, options) when is_list(liste) do
     liste
-    |> IO.inspect(label: "\nLISTE")
+    # |> IO.inspect(label: "\nLISTE")
     |> Enum.map(fn {type, data} -> 
       # IO.inspect(type, label: "Type du token")
       # IO.inspect(data, label: "Data du token")
@@ -94,7 +94,7 @@ defmodule Pharkdown.Formatter do
     texte
     # |> IO.inspect(label: "\nTEXTE POUR TRANSFORMATIONS")
     |> formate_smart_guillemets(options)
-    |> glue_insecables(options)
+    |> pose_anti_wrappers(options)
     |> formate_simples_styles(options)
     |> formate_href_links(options)
     |> formate_exposants(options)
@@ -117,7 +117,7 @@ defmodule Pharkdown.Formatter do
     "<pre><code lang={{GL}}#{data[:language]}{{GL}}>\n" <> (
       data[:content]
     ) <> "\n</code></pre>"
-    |> IO.inspect(label: "Retourné par formate(:blockcode ...)")
+    # |> IO.inspect(label: "Retourné par formate(:blockcode ...)")
   end
 
   @doc """
@@ -278,38 +278,6 @@ defmodule Pharkdown.Formatter do
     iex> Pharkdown.Formatter.formate("<% eval(4 + @value) %> et <% eval(2 * @value) %>", [])
     "<% eval(4 + @value) %> et <% eval(2 * @value) %>"
 
-    // --- Guillemets et apostrophes ---
-
-    iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\" mais \\"encore cela\\".", [])
-    "Il a dit <nowrap>« ça »</nowrap> et aussi <nowrap>« cela »</nowrap> mais <nowrap>« encore</nowrap> <nowrap>cela »</nowrap>."
-
-    iex> Pharkdown.Formatter.formate("Il a dit \\"ça\\" et aussi \\"cela\\".", [smarties: false])
-    "Il a dit \\"ça\\" et aussi \\"cela\\"."
-
-    iex> Pharkdown.Formatter.formate("Il l'est pour toujours aujourd'hui", [])
-    "Il l’est pour toujours aujourd’hui"
-
-    iex> Pharkdown.Formatter.formate("Il l'est pour toujours aujourd'hui", [smarties: false])
-    "Il l'est pour toujours aujourd'hui"
-
-    // Conserver dans les codes
-    iex> Pharkdown.Formatter.formate("Il l'est pour \\"tou <% \\"un texte\\" %>jours\\" aujourd'hui", [smarties: true])
-    "Il l’est pour <nowrap>« tou</nowrap> <nowrap><% \\"un texte\\" %>jours »</nowrap> aujourd’hui"
-    
-    // --- Pour empêcher les retours à la ligne de ponctuations même 
-          avec insécables ---
-
-    iex> Pharkdown.Formatter.formate("bravo ! bravo ! et encore ; qui le demande ? et ça aussi : et aussi là !?!", [])
-    "<nowrap>bravo !</nowrap> <nowrap>bravo !</nowrap> et <nowrap>encore ;</nowrap> qui le <nowrap>demande ?</nowrap> et ça <nowrap>aussi :</nowrap> et aussi <nowrap>là !?!</nowrap>"
-
-    // tirets (différentes tailles ici)
-    iex> Pharkdown.Formatter.formate(" et — il faut dire — que — oui — mais — pas toujours — et — ça — et — encore ça — mais — toujours pas ça —", [])
-    " et <nowrap>— il</nowrap> faut <nowrap>dire —</nowrap> que <nowrap>— oui —</nowrap> mais <nowrap>— pas</nowrap> <nowrap>toujours —</nowrap> et <nowrap>— ça —</nowrap> et <nowrap>— encore</nowrap> <nowrap>ça —</nowrap> mais <nowrap>— toujours</nowrap> pas <nowrap>ça —</nowrap>"
-
-    // guillemets 
-    iex> Pharkdown.Formatter.formate("« un » et « deux mots » et « encore trois mots » sans « insécable » et « ça aussi » et « encore ça aussi ».", [])
-    "<nowrap>« un »</nowrap> et <nowrap>« deux</nowrap> <nowrap>mots »</nowrap> et <nowrap>« encore</nowrap> trois <nowrap>mots »</nowrap> sans <nowrap>« insécable »</nowrap> et <nowrap>« ça</nowrap> <nowrap>aussi »</nowrap> et <nowrap>« encore</nowrap> ça <nowrap>aussi »</nowrap>."
-
     // Code dans des backsticks
     iex> Pharkdown.Formatter.formate("`du code`", [])
     "<code>du code</code>"
@@ -363,16 +331,130 @@ defmodule Pharkdown.Formatter do
     end
   end
 
-  @regex_insecable_guils ~r/(«)[  ](.+)[  ](»)/Uu
+  @doc """
+  Pose des anti-wrappers sur les textes.
+
+  ## Explication
+
+    Même avec l'utilisation d'insécables ou de '&amp;nbsp;', des 
+    signes (comme des ponctuations) peuvent se retrouver à la ligne.
+    Pour empêcher ce comportement de façon définitive, on entoure les
+    texte "insécables" de <nowrap>...</nowrap> qui est une balise 
+    spéciale qui possède la propriété white-space à nowrap (d'où son
+    nom).
+    La méthode ci-dessous est chargée de cette opération.
+
+    Noter qu'elle intervient après que les guillemets ont été (ou 
+    non) remplacés par des chevrons. Elle s'assure également que 
+    tous les insécables aient été placés (même avec les chevrons car
+    ils ont pu être mis par l'utilisateur)
+
+  ## Examples
+
+    // Sans rien, ne change rien
+    iex> Pharkdown.Formatter.pose_anti_wrappers("bonjour tout le monde")
+    "bonjour tout le monde"
+
+    // Mot unique, simple guillemets sans insécables
+    iex> Pharkdown.Formatter.pose_anti_wrappers("« bonjour »")
+    T.h "<nowrap>« bonjour »</nowrap>"
+    
+    // Deux mots, simple guillemets sans insécables
+    iex> Pharkdown.Formatter.pose_anti_wrappers("« bonjour vous »")
+    T.h "<nowrap>« bonjour</nowrap> <nowrap>vous »</nowrap>"
+
+    // Plusieurs mots, simples guillemets sans insécables
+    iex> Pharkdown.Formatter.pose_anti_wrappers("« bonjour à tous »")
+    T.h "<nowrap>« bonjour</nowrap> à <nowrap>tous »</nowrap>"
+
+    iex> Pharkdown.Formatter.pose_anti_wrappers("bonjour !")
+    T.h "<nowrap>bonjour !</nowrap>"
+
+    iex> Pharkdown.Formatter.pose_anti_wrappers("bonjour !?!")
+    T.h "<nowrap>bonjour !?!</nowrap>"
+
+    iex> Pharkdown.Formatter.pose_anti_wrappers("bonjour vous !")
+    T.h "bonjour <nowrap>vous !</nowrap>"
+
+    iex> Pharkdown.Formatter.pose_anti_wrappers("bonjour vous !?")
+    T.h "bonjour <nowrap>vous !?</nowrap>"
+
+    iex> Pharkdown.Formatter.pose_anti_wrappers("« bonjour à tous ! »")
+    T.h "<nowrap>« bonjour</nowrap> à <nowrap>tous ! »</nowrap>"
+    
+    iex> Pharkdown.Formatter.pose_anti_wrappers("« bonjour à tous !?! »")
+    T.h "<nowrap>« bonjour</nowrap> à <nowrap>tous !?! »</nowrap>"
+    
+    
+    iex> Pharkdown.Formatter.pose_anti_wrappers("« bonjour à tous » !")
+    T.h "<nowrap>« bonjour</nowrap> à <nowrap>tous » !</nowrap>"
+
+  """
+
+  # Pour insécables simples manquantes
+  @regex_req_insec_before_ponct ~r/ ([!?:;])/
+  @rempl_req_insec_before_poncts " \\1"
+  # Pour insécables manquantes entre tirets (penser qu'il peut y en 
+  # avoir quand même une de placée, d'où l'utilisation de [  ] au 
+  # lieu de l'espace seule)
+  @regex_req_insec_in_cont ~r/([—–«])[  ](.+)[  ]([»—–])/Uu
+  @rempl_req_insec_in_cont "\\1 \\2 \\3"
+  # Le cas le plus complexe, où l'on peut avoir guillemets + tirets +
+  # ponctuations doubles, dans tous les sens, c'est-à-dire aussi bien :
+  #   — « bonjour à tous » ! —
+  #   — « bonjour à tous » — !
+  #   « — bonjour à tous » ! —  -- fautif, quand même
+  #   « bonjour — à — tous ! »
+  #   « bonjour — à tous — » !
+  # Le seul cas qu'on envisage pas ici, c'est le cas de chevrons 
+  # imbriqués dans des chevrons, qui est une faute.
+  @regex_insecable_guils ~r/([—–«] )?([—–«] )(.+?)( [—–!?:;»]+)( [—–!?:;»]+)?( [—–!?:;»]+)?/u
   @regex_insecable_tirets ~r/([—–])[  ](.+)[  ]([—–])/Uu
-  @regex_insecable_ponct ~r/\b([^ ]+)[  ]([!?:;]+?)/Uu   ; @remp_insecable_ponct "<nowrap>\\1 \\2</nowrap>"
-  defp glue_insecables(string, options) do
+  @regex_insecable_ponct ~r/\b([^ ]+) ([!?:;]+?)/Uu   ; @remp_insecable_ponct "<nowrap>\\1&nbsp;\\2</nowrap>"
+  def pose_anti_wrappers(string, options \\ []) do
     string
-    |> string_replace(@regex_insecable_guils, options)
+    # On doit commencer par mettre des espaces insécables là où
+    # ils manquent
+    |> String.replace(@regex_req_insec_before_ponct, @rempl_req_insec_before_poncts)
+    |> String.replace(@regex_req_insec_in_cont, @rempl_req_insec_in_cont)
+    # Ensuite on traite tous les cas d'insécables imbriqués
+    |> string_replace(@regex_insecable_guils, &antiwrappers_guils_et_autres/7, options)
+    # |> string_replace(@regex_insecable_guils, options)
     |> string_replace(@regex_insecable_tirets, options)
     |> String.replace(@regex_insecable_ponct, @remp_insecable_ponct)
   end
+
+  # Fonction traitant les anti-wrappers sur les strings avec guillemets
+  # Elle permet d'utiliser Regex.replace dans un pipe de strings
+  defp string_replace(string, regex, callback, _options) do
+    Regex.replace(regex, string, callback)
+  end
+
+  defp antiwrappers_guils_et_autres(tout, arg1, arg2, inner_guils, arg3, arg4, arg5) do
+    found = %{
+      tout: tout, arg1: arg1, inner_guils: inner_guils, arg3: arg3, arg4: arg4
+    }
+    # Le principe simple est le suivant : si +inner_guils+ contient 
+    # un seul mot, on met le nowrap autour de tout, alors que s'il y
+    # en a plusieurs, on ne prend que le dernier.
+    inner_guils = String.split(inner_guils, " ")
+    cond do
+    Enum.count(inner_guils) == 1 -> 
+      "<nowrap>#{tout}</nowrap>"
+    Enum.count(inner_guils) == 2 -> 
+      [first_mot, last_mot] = inner_guils
+      "<nowrap>#{arg1}#{arg2}#{first_mot}</nowrap> <nowrap>#{last_mot}#{arg3}#{arg4}#{arg5}</nowrap>"
+    true ->
+      {first_mot, reste}  = List.pop_at(inner_guils, 0)
+      {last_mot, reste}   = List.pop_at(reste, -1)
+      reste = Enum.join(reste, " ")
+      "<nowrap>#{arg1}#{arg2}#{first_mot}</nowrap> #{reste} <nowrap>#{last_mot}#{arg3}#{arg4}#{arg5}</nowrap>"
+    end 
+    |> String.replace(~r/ /, "&nbsp;")
+  end
   
+  # Méthode "détachée" permettant de placer les anti-wrappers sur les
+  # String en tenant compte du nombre de mots.
   defp string_replace(string, regex, _options) do
     if String.match?(string, regex) do
       Regex.replace(regex, string, fn _tout, tbefore, content, tafter ->
@@ -586,6 +668,5 @@ defmodule Pharkdown.Formatter do
       current_level: accu.current_level + diff
     })
   end
-
 
 end

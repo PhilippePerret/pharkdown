@@ -90,7 +90,7 @@ Une des grandes forces de Pharkdown par rapport à Markdown est de pouvoir styli
 Ces classes et ces identifiants sont simplement définies en début de paragraphe, par un texte qui ne doit contenir que des lettres, des points, des tirets et des nombres. Il 
 
 ~~~
-.css1.css2.en_core#monPar: Le paragraphe sera dans le style (class) css1, css2 et encore et aura pour identifiant '#monPar`.
+#monPar.css1.css2.en_core: Le paragraphe sera dans le style (class) css1, css2 et encore et aura pour identifiant '#monPar`.
 ~~~
 
 Le code ci-dessus produira : 
@@ -102,14 +102,16 @@ Le code ci-dessus produira :
 On peut même stipuler explicitement la balise à utiliser en la mettant en tout premier, sans point :
 
 ~~~
-div#monDiv: C'est un div et pas un paragraphe.
+p#monDiv: C'est un "vrai" paragraphe, pas un div.
 ~~~
 
 … produira :
 
 ~~~
-<div id="monDiv">C'est un div et pas un paragraphe.</div>
+<p id="p monDiv">C'est un div et pas un paragraphe.</p>
 ~~~
+
+Il est impératif de mettre toujours dans l'ordre `tag-identifiant-classes css`.
 
 ## Les environnements
 
