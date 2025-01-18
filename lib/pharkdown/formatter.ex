@@ -1,6 +1,7 @@
 defmodule Pharkdown.Formatter do
 
   alias Pharkdown.Parser
+  alias Transformer, as: T
 
   @doc """
 
@@ -115,7 +116,7 @@ defmodule Pharkdown.Formatter do
 
   def formate(:blockcode, data, _options) do
     "<pre><code lang={{GL}}#{data[:language]}{{GL}}>\n" <> (
-      data[:content]
+      data[:content] |> T.h(:less_than)
     ) <> "\n</code></pre>"
     # |> IO.inspect(label: "Retourné par formate(:blockcode ...)")
   end

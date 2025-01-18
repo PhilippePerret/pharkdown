@@ -3,10 +3,34 @@ defmodule PharkdownTest do
 
   doctest Pharkdown
 
-  alias Pharkdown.Parser
+  alias Pharkdown.{Engine, Parser}
   alias Transformer, as: T
 
+  test "Un bloc de code ne doit (presque) pas être touché" do
+    code = """
+    Un *paragraphe*.
+    ~~~elixir
+    Du code <balise> est *italique*.
+    Plusieurs [liens](pour/voir) avec
+    .css: des "guillemets" et 'apostrophes'
+    ~~~
+    .css: Un autre **paragraphe**.
+    """
+    expect = """
+    <div class="p">Un <em>paragraphe</em>.</div>
+    <pre><code lang="elixir">
+    Du code &lt;balise> est *italique*.
+    Plusieurs [liens](pour/voir) avec
+    .css: des "guillemets" et 'apostrophes'
+    </code></pre>
+    <div class="p css">Un autre <strong>paragraphe</strong>.</div>
+    """ |> String.trim()
+    actual = Engine.compile_string(code)
+    assert actual == expect
+  end
+
   test "Une ligne complètement en italique" do
+    # C'était un cas problématique
     code = """
     Un premier paragraphe
     *Une ligne complètement en italiques*
@@ -19,7 +43,6 @@ defmodule PharkdownTest do
       {:paragraph, [content: "Un autre paragraphe."]}
     ]
     assert actual == expect
-
   end
 
   describe "Sans l'option :smarties" do

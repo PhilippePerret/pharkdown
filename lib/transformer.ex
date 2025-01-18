@@ -1,7 +1,7 @@
 defmodule Transformer do
   @moduledoc """
-  Module permettant des transformations diverses, pour le moment 
-  surtout réservées aux tests.
+  Module permettant des transformations diverses avec des codes très
+  courts (par exemple `T.h()' ).
 
   Utiliser    alias Transformer, as: T
   
@@ -10,14 +10,29 @@ defmodule Transformer do
 
   """
 
+
   @doc """
   Transformations vers HTML
 
-  Espaces insécables -> &nbsp;
+  # Examples
+
+    //Espaces insécables -> &nbsp;
+    iex> "bonjour !" |> T.h()
+    "bonjour&nbsp;!"
+
+    // Avec l'option :less_than
+    iex> "une <balise>" |> T.h(:less_than)
+    "une &lt;balise>"
+
   """
-  def h(string) when is_binary(string) do
-    string
-    |> String.replace(~r/ /, "&nbsp;")
+  def h(string, :less_than) when is_binary(string) do
+    string |> String.replace("<", "&lt;")
   end
+
+  def h(string) when is_binary(string) do
+    string |> String.replace(~r/ /, "&nbsp;")
+  end
+
+
 
 end

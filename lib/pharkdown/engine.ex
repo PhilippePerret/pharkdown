@@ -33,7 +33,7 @@ defmodule Pharkdown.Engine do
   Transforme le texte +string+, formaté en Pharkdown, en un texte 
   HTML conforme.
   """
-  def compile_string(string, options \\ nil) do
+  def compile_string(string, options \\ nil) when is_binary(string) do
     options = is_nil(options) && compile_options(nil, []) || options
     string
     |> Loader.load_external_contents(options)
