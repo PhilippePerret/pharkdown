@@ -30,7 +30,7 @@ Pour placer les 2^e ou 1^er, ou les notes^12, on utilise le circonflexe avant l'
 Le 1^er et la 2^e comme la 1^re et le 2^e.
 ~~~
 
-Pharkdown procède ici à des corrections automatiques (sauf si les options sont réglées à `correct: false`) dont la liste est la suivante :
+Pharkdown procède ici à des corrections automatiques (sauf si les [options](#options) sont réglées à `correct: false`) dont la liste est la suivante :
 
 ~~~
 2^ème => "ème" fautif remplacé par "e"
@@ -38,7 +38,7 @@ Pharkdown procède ici à des corrections automatiques (sauf si les options sont
 e après X, V, I ou un nombre comme dans XIXe ou 54e => e en exposant
 ~~~
 
-Pour que ces corrections ne s'effectuent pas, mettre les options à `correct: false`. Seul le circonflexe sera traité en tant que marque d'exposant. Le texte `1\^ère` fautif restera `1<sup>ère</sup>` (par exemple dans un cours d'orthographe).
+Pour que ces corrections ne s'effectuent pas, mettre les [options](#options) à `correct: false`. Seul le circonflexe sera traité en tant que marque d'exposant. Le texte `1\^ère` fautif restera `1<sup>ère</sup>` (par exemple dans un cours d'orthographe).
 
 
 ### Liens `[...](...)`
@@ -214,3 +214,24 @@ document~
 ~~~
 
 {TODO: Décrire ce que cet environnement a de spécial…}
+
+<a name="options"></a>
+
+### Options
+
+Pour définir les options, ajouter au fichier `config/config.ex` la ligne suivante :
+
+~~~elixir
+config :pharkdown, :options, [
+  ... liste des options ...
+]
+~~~
+
+Les options sont les suivantes :
+
+~~~
+smarties      Si true (default), corrige les guillemets, les appos-
+              trophes.
+correct       Si true (default), corrige certaines fautes comme les
+              mauvais exposants, les insécables oubliés, etc.
+~~~
