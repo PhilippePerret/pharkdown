@@ -6,6 +6,7 @@ defmodule PharkdownCasSpeciauxTests do
   use ExUnit.Case
 
   alias Pharkdown.Engine
+  alias Transformer, as: T
 
     # Cette disposition :
     #   ««« "bonjour" ! »»» 
@@ -26,13 +27,13 @@ defmodule PharkdownCasSpeciauxTests do
     test "simple mot entre guillemets" do
       code = "— \"bonjour\" — !"
       actual = Engine.compile_string(code)
-      expect = "<div class=\"p\"><nowrap>— « bonjour » — !</nowrap>" |> String.replace(~r/ /, '&nbsp;')
+      expect = "<div class=\"p\"><nowrap>— « bonjour » — !</nowrap>" |> T.h()
       assert actual == expect
     end
     test "plusieurs mots entre guillemets" do
       code = "— \"bonjour tout le monde\" — !"
       actual = Engine.compile_string(code)
-      expect = "<div class=\"p\">–&nbsp;«&nbsp;bonjour tout le <nowrap>monde&nbsp;»&nbsp;—&nbsp;!</nowrap>"
+      expect = "<div class=\"p\">– « bonjour tout le <nowrap>monde » — !</nowrap>" |> T.h()
       assert actual == expect
     end
 
