@@ -636,6 +636,28 @@ defmodule Pharkdown.Formatter do
   end
 
   @doc """
+  Fonction qui traite les fonctions utilisateurs dans le code initial
+  du fichier. Note : Ça se passe en tout début, avant le parsing du
+  code.
+  """
+  @regex_custom_functions ~r/([a-z_]+)\((.*)\)/U
+  def treate_custom_functions(string, _options) do
+    if Regex.match?(@regex_custom_functions, string) do
+      Regex.scan(@regex_custom_functions, string)
+      |> Enum.reduce(string, fn found, string -> 
+        [tout, fun_name, fun_params] = found
+        # rempl = "{{FONCTION À ÉVALUER: #{fun_name} avec les paramètres : #{inspect fun_params}}}"
+        # rempl = Code.eval_string(tout, )
+        rempl = apply(Pharkdown.Helpers, String.to_atom(fun_name), [])
+        String.replace(string, tout, rempl, [global: false])
+      end)
+      |> IO.inspect(label: "\nSTRING après fonctions")
+    else
+      string
+    end
+  end
+
+  @doc """
   @private
 
   ## Description

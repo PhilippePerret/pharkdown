@@ -38,6 +38,8 @@ defmodule Pharkdown.Engine do
     string
     |> Loader.load_external_contents(options)
     # |> IO.inspect(label:  titre_exerg("After Loader.load_external_contents/2"))
+    |> Formatter.treate_custom_functions(options)
+    # |> IO.inspect(label:  titre_exerg("After Formatter.treate_custom_functions/2"))
     |> Parser.parse(options)
     # |> IO.inspect(label: titre_exerg("After Parser.parse/2"))
     |> Formatter.formate(options)
