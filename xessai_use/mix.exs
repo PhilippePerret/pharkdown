@@ -33,7 +33,7 @@ defmodule EssaiUse.MixProject do
   defp deps do
     [
       # Pour Pharkdown et ce test
-      {:pharkdown, path: "../../../../../pharkdown"},
+      {:pharkdown, path: "../../pharkdown"},
       {:phoenix, "~> 1.7.14"},
       {:phoenix_html, "~> 4.1", override: true},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

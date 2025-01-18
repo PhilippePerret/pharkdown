@@ -505,6 +505,25 @@ defmodule Pharkdown.Parser do
     end)
   end
 
+  # Pour les doctests, voir __doctests_for_treatment_env_document/0 plus bas
+  def treat_content_by_env(:document, content, collector) do
+    content
+    |> String.split("\n")
+    |> Enum.reduce(collector, fn line, accu -> 
+      line
+      |> String.trim()
+      |> add_content_to_env_content(:paragraph, accu) # => accumulateur
+    end)
+  end
+
+
+  # Quand environnement non trouvé
+  def treat_content_by_env(envname, _content, coll) do
+    IO.puts "Environnement inconnu : #{inspect envname}"
+    coll
+  end
+
+
   @doc """
   ## Traitement d'un environnement de type :document
 
@@ -519,23 +538,8 @@ defmodule Pharkdown.Parser do
     ]
 
   """
-  def treat_content_by_env(:document, content, collector) do
-    # IO.puts "-> treat_content_by_env(\navec :\n:document, \navec content: #{inspect content}\navec collector: #{inspect collector}\n)"
-    content
-    |> String.split("\n")
-    |> Enum.reduce(collector, fn line, accu -> 
-      line
-      |> String.trim()
-      |> add_content_to_env_content(:paragraph, accu) # => accumulateur
-    end)
-  end
-
-
-  # Non trouvé
-  def treat_content_by_env(envname, _content, coll) do
-    IO.puts "Environnement inconnu : #{inspect envname}"
-    coll
-  end
+  def __doctests_for_treatment_env_document, do: nil
+  
 
   defp add_content_to_env_content(content, type, accu) do
     # IO.puts "-> add_content_to_env_content(\navec content: #{inspect content}\navec type: #{inspect type}\navec collector: #{inspect accu}\n)"

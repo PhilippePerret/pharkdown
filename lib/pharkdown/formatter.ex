@@ -431,9 +431,6 @@ defmodule Pharkdown.Formatter do
   end
 
   defp antiwrappers_guils_et_autres(tout, arg1, arg2, inner_guils, arg3, arg4, arg5) do
-    found = %{
-      tout: tout, arg1: arg1, inner_guils: inner_guils, arg3: arg3, arg4: arg4
-    }
     # Le principe simple est le suivant : si +inner_guils+ contient 
     # un seul mot, on met le nowrap autour de tout, alors que s'il y
     # en a plusieurs, on ne prend que le dernier.

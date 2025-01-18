@@ -60,12 +60,12 @@ defmodule Pharkdown do
   def update_phad_files(phad_data) do
     Enum.each(phad_data.new, fn dfile ->
       # IO.puts "Création du fichier HTML de #{dfile[:name]}"
-      Pharkdown.Engine.compile_file(dfile[:phad], dfile[:html], dfile[:name])
+      Pharkdown.Engine.compile_file(dfile[:phad], dfile[:html])
     end)
     Enum.each(phad_data.mod, fn dfile ->
       # IO.puts "Actualisation du fichier HTML de #{dfile[:name]}"
       File.rm(dfile[:html])
-      Pharkdown.Engine.compile_file(dfile[:phad], dfile[:html], dfile[:name])
+      Pharkdown.Engine.compile_file(dfile[:phad], dfile[:html])
     end)
   end
 
