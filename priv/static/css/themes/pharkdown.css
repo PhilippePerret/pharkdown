@@ -25,6 +25,15 @@ div.p {
   font-size: inherit;
 }
 
+/* === Code === */
+
+code {
+  background-color: #CDCDCD;
+}
+pre + code {
+  background-color: #333333;
+  color: white;
+}
 
 /* === Environnement :dictionary === */
 
