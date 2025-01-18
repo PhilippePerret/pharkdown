@@ -25,8 +25,12 @@ defmodule Transformer do
     "une &lt;balise>"
 
   """
+  @regex_less_than ~r/(^|[^\\])\</ ; @rempl_less_than "\\1&lt;"
+  @regex_slashed_less_than "\\<" ; @rempl_slashed_less_than "<"
   def h(string, :less_than) when is_binary(string) do
-    string |> String.replace("<", "&lt;")
+    string 
+    |> String.replace(@regex_less_than, @rempl_less_than)
+    |> String.replace(@regex_slashed_less_than, @rempl_slashed_less_than)
   end
 
   def h(string) when is_binary(string) do

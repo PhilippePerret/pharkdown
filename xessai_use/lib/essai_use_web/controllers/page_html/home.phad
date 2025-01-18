@@ -9,6 +9,7 @@ Le titre ci-dessus a été obtenu par le code : `#Pharkdown (titre de niveau 1)`
 
 ### Titre de niveau 3
 
+
 #### Titre de niveau 4
 
 #### Titre de niveau 5
@@ -18,9 +19,10 @@ Le titre ci-dessus a été obtenu par le code : `#Pharkdown (titre de niveau 1)`
 C'est une première page.
 J'ajoute une ligne au fichier phad.
 
-<%= @texte_dynamique %>
+<%= raw @texte_dynamique %>
 
-La phrase ci-dessus est obtenue par le code `<%= @texte_dynamique %>`.
+La phrase ci-dessus est obtenue par le code `<%= raw @texte_dynamique %>`.
+
 
 ### Les Environnements
 

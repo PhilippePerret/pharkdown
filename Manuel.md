@@ -35,6 +35,13 @@ end
 ~~~
 
 Noter, ci-dessus, que c'est idiot de faire ça puisque les textes donnés sont interprétés pour du HTML donc il y a double interprétation ici, ce qui produit le `&amp;nbsp;` (la méthode `T.h/1` produit `&nbsp;` à la place de l'insécable et Phoenix remplace sont `&` par un `&amp;`.
+Mais cela serait tout à fait justifié en utilisant : 
+
+~~~
+C'est <%= raw @message %>
+~~~
+
+… qui permet de traiter du code HTML tel quel.
 
 > Rappel : Si des codes doivent être évalués (définitivement) à la compilation du fichier (transformation `.phad -> .html.heex`) il faut utiliser les [fonctions de transformation](#fonctions-transformation).
 
