@@ -45,7 +45,7 @@ defmodule Pharkdown.Parser do
     # fin de liste.
     # |> IO.inspect(label: "\nTEXTE AVANT TOKENIZE")
     |> tokenize(options)
-    # |> IO.inspect(label: "\n<- parse avec")
+    # |> IO.inspect(label: "\n<- On revient de parse/2 avec")
   end
 
   @doc """
@@ -56,21 +56,6 @@ defmodule Pharkdown.Parser do
 
     iex> Pharkdown.Parser.tokenize("Une simple phrase")
     [{:paragraph, [content: "Une simple phrase"]}]
-
-    iex> Pharkdown.Parser.tokenize("# Un titre simple")
-    [{:title, [content: "Un titre simple", level: 1]}]
-
-    iex> Pharkdown.Parser.tokenize("# Un grand titre\\n## Un sous-titre")
-    [
-      {:title, [content: "Un grand titre", level: 1]},
-      {:title, [content: "Un sous-titre", level: 2]},
-    ]
-
-    iex> Pharkdown.Parser.tokenize("# Un grand titre\\nUn simple paragraphe.")
-    [
-      {:title, [content: "Un grand titre", level: 1]},
-      {:paragraph, [content: "Un simple paragraphe."]},
-    ]
 
     --- Environnements ---
 
@@ -183,7 +168,6 @@ defmodule Pharkdown.Parser do
   # 3) une fois que tout le texte a été analysé, on le parse séquentiellement
   #    pour obtenir une liste de tokens dans l'ordre
   #
-  @regex_titres ~r/^(\#{1,7}) (.+)$/m
   @regex_blockcode ~r/(~~~|```)([a-z]+\n)?(.+)\n\1/ms
   @regex_known_environments ~r/^\~(#{Enum.join(@known_environments, "|")})\n(.+)\n\1\~$/ms
 
@@ -201,28 +185,48 @@ defmodule Pharkdown.Parser do
     # |> IO.inspect(label: "\nCOLLECTOR APRÈS traitement des listes")
     |> scan_for_rest() # tout ce qui reste est considéré comme des paragraphes
     |> reorder_tokens() # on met les tokens dans l'ordre (cf. N000)
+    # |> IO.inspect(label: "\nAprès réagencement des tokens")
     |> (fn coll -> coll.tokens end).()
     # collector.tokens contient maintenant la liste ordonnée de tous
     # les tokens qui constituent le texte. On n'a plus besoin du reste.
+    # Note : À réfléchir, peut-être qu'à l'avenir il faudrait garder
+    # le collector tel quel, pour garder la trace de certains token 
+    # qui seraient à l'intérieur de :content d'éléments.
   end
 
-  # Méthode générique pour ajouter un token dans le collecteur
-  #
-  # Concrètement, cette méthode : 
-  #   1) définit le nouvelle index pour la marque du token
-  #   2) remplace le texte trouvé dans le texte par la marque du token
-  #   3) ajoute le token AST-like à la liste des tokens
-  #
-  #   Note : la fonction ajoute toujours l'index courant au +data+
-  #          transmises.
-  #
-  # @param collector  Map  Le collecteur (accumulateur) général
-  # @param type       Atom Le type de token, par exemple :title ou :paragraph
-  # @param data       List les données propres au token (par exemple
-  #                   le :level pour un titre)
-  # @param found      Le texte trouvé dans le texte actuel.
-  #
-  defp add_to_collector(collector, type, data, found) do
+
+  @doc """
+  Méthode générique pour ajouter un token dans le collecteur. La 
+  fonction remplace le texte correspond au token dans le texte à 
+  traiter et enregistre le token dans la liste des tokens.
+
+  Concrètement, cette méthode : 
+    1) définit le nouvel index pour la marque du nouveau token
+    2) remplace le texte trouvé dans le texte par la marque du token
+    3) ajoute le token AST-like à la liste des tokens
+  
+    Note : la fonction ajoute toujours l'index courant au +data+
+           transmises.
+  
+  @param collector  Map  Le collecteur (accumulateur) général
+  @param type       Atom Le type de token, par exemple :title ou :paragraph
+  @param data       List les données propres au token (par exemple
+                    le :level pour un titre)
+  @param found      Le texte trouvé dans le texte actuel.
+
+  NOTES
+    
+    N002
+      Il faut ne remplacer qu'une seule fois, sinon il y aura des
+      problème avec des paragraphes qui peuvent contenir la même
+      chose que la chose à remplacer. Cas concret : on a un titre
+      `# mon titre'. Si, dans un paragraphe avant ou après on trouve
+      le texte `En le mettant avec # mon titre' et bien ce paragraphe
+      contiendrait au final un token (celui du titre) qui ne serait
+      jamais remplacé ensuite et qui n'aurait aucun sens même rempla-
+      cé.
+  """ 
+  def add_to_collector(collector, type, data, found) do
     # L'index de ce token ajouté
     token_index = Enum.count(collector.tokens)
     remp  = "TOKEN#{token_index}NEKOT"
@@ -232,7 +236,8 @@ defmodule Pharkdown.Parser do
     new_texte = 
       case collector.texte do
       x when is_binary(x) -> 
-        String.replace(collector.texte, found, remp)
+        #                                            # N002
+        String.replace(collector.texte, found, remp, [global: false])
       x when is_list(x) ->
         collector.texte ++ [remp]
       end
@@ -310,13 +315,36 @@ defmodule Pharkdown.Parser do
     end
   end
 
+  @doc """
+  Scan des titres
 
-  defp scan_titres_in(collector) do
+  ## Examples
+
+    iex> Pharkdown.Parser.tokenize("# Un titre")
+    [{:title, [content: "Un titre", level: 1]}]
+
+    iex> Pharkdown.Parser.tokenize("### Un titre de niveau 3")
+    [{:title, [content: "Un titre de niveau 3", level: 3]}]
+
+    iex> Pharkdown.Parser.tokenize("####### Un titre de niveau 7")
+    [{:title, [content: "Un titre de niveau 7", level: 7]}]
+
+    iex> Pharkdown.Parser.tokenize("######## Mauvais titre de niveau 8")
+    [{:paragraph, [content: "######## Mauvais titre de niveau 8"]}]
+
+    iex> Pharkdown.Parser.tokenize("# Un grand titre\\n## Un sous-titre")
+    [
+      {:title, [content: "Un grand titre", level: 1]},
+      {:title, [content: "Un sous-titre", level: 2]},
+    ]
+
+  """
+  @regex_titres ~r/^(\#{1,7}) (.+)$/m
+  def scan_titres_in(collector) do
     case Regex.scan(@regex_titres, collector.texte) do
     nil -> collector
     res -> Enum.reduce(res, collector, fn groupes, collector ->
         [tout, level, contenu] = groupes
-
         # Données pour le token
         data = [
           content:  String.trim(contenu), 
@@ -577,9 +605,11 @@ defmodule Pharkdown.Parser do
           add_to_collector(coll, :paragraph, data, parag)
         end
     end)
+    # À la fin, on remet le texte du collecteur en string
     |> (fn collector -> 
       %{collector | texte: Enum.join(collector.texte, "\n")}
     end).()
+    # |> IO.inspect(label: "Fin du scan for rest")
   end
 
 
@@ -593,18 +623,22 @@ defmodule Pharkdown.Parser do
 
     # On boucle sur tous les TOKEN<index>NEKOT
     Regex.scan(@regex_balise_token_multi, collector.texte)
-    |> Enum.reduce(collector, fn found, coll ->
-      [_tout, token_index] = found
-      token_index = String.to_integer(token_index)
-      # IO.inspect(token_index, label: "token_index")
-      this_token = 
-        ini_tokens
-        |> Enum.at(token_index)
-
-      # On remet les tokens dans le bon ordre
-      %{ coll | tokens: coll.tokens ++ [this_token] }
-    end)
+    |> Enum.reduce(collector, &remplace_found_tokens_in_collector(&1, &2, ini_tokens))
+    # On doit ensuite boucler sur tous les tokens, qui peuvent avoir 
+    # des marques de token à l'intérieur. Pour le moment, je voudrais
+    # m'en passer, mais il faut voir si ça ne peut pas arriver.
+    # Regex.scan(@regex_balise_token_multi, collector.texte)
+    # |> Enum.reduce(collector, &remplace_found_tokens_in_collector(&1, &2, ini_tokens))
     # |> IO.inspect(label: "\nCOLLECTOR avec TOKENS RÉ-AGENCÉS")
+  end
+
+  defp remplace_found_tokens_in_collector(found, collector, ini_tokens) do
+    [_tout, token_index] = found
+    token_index = String.to_integer(token_index)
+    # IO.inspect(token_index, label: "token_index")
+    this_token = Enum.at(ini_tokens, token_index)
+    # On remet les tokens dans le bon ordre
+    %{ collector | tokens: collector.tokens ++ [this_token] }
   end
 
 end #/module Pharkdown.Parser

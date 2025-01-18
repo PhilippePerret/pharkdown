@@ -29,6 +29,19 @@ defmodule PharkdownTest do
     assert actual == expect
   end
 
+  test "Traitement correct des codes dans le texte" do
+    code = """
+    ## Titre de niveau 2
+    `## Titre de niveau 2`
+    """
+    expect = """
+    <h2>Titre de niveau 2</h2>
+    <div class="p"><code>## Titre de niveau 2</code></div>
+    """ |> String.trim()
+    actual = Engine.compile_string(code)
+    assert actual == expect
+  end
+
   test "Une ligne complètement en italique" do
     # C'était un cas problématique
     code = """
