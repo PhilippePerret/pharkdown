@@ -9,7 +9,7 @@ defmodule EssaiUseWeb.PageController do
 
   def home(conn, _params) do
     render(conn, :home, %{
-      texte_dynamique: "Ce texte est généré <dynamiquement> à l'aide de \<code><%= ... %>\</code>" |> T.h(:less_than)
+      texte_dynamique: "Ce texte est généré <dynamiquement> à l'aide de \\<code><%= ... %>\\</code>" |> T.h(:less_than)
     })
   end
 

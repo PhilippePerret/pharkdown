@@ -23,7 +23,6 @@ J'ajoute une ligne au fichier phad.
 
 La phrase ci-dessus est obtenue par le code `<%= raw @texte_dynamique %>`.
 
-
 ### Les Environnements
 
 #### Dictionnaire (`dictionary`)
