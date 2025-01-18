@@ -4,6 +4,7 @@ defmodule PharkdownTest do
   doctest Pharkdown
 
   alias Pharkdown.Parser
+  alias Transformer, as: T
 
   test "Une ligne complètement en italique" do
     code = """
@@ -26,14 +27,14 @@ defmodule PharkdownTest do
       # Ils se corrigent en temps normal
       code = "Des \"guillemets\" !"
       actual = Pharkdown.Engine.compile_string(code)
-      expect = "<div class=\"p\">Des <nowrap>« guillemets » !</nowrap>"
+      expect = "<div class=\"p\">Des <nowrap>« guillemets » !</nowrap></div>" |> T.h()
       assert actual == expect
 
       Application.put_env(:pharkdown, :options, [{:smarties, false}])
       # Ils ne se corrigent plus
       code = "Des \"guillemets\" !"
       actual = Pharkdown.Engine.compile_string(code)
-      expect = "<div class=\"p\">Des <nowrap>\"guillemets\" !</nowrap>"
+      expect = "<div class=\"p\">Des <nowrap>\"guillemets\" !</nowrap></div>" |> T.h()
       assert actual == expect
 
     end

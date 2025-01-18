@@ -34,7 +34,7 @@ defmodule Pharkdown.Engine do
   HTML conforme.
   """
   def compile_string(string, options \\ nil) do
-    options = is_nil(options) && compile_options(nil, options) || options
+    options = is_nil(options) && compile_options(nil, []) || options
     string
     |> Loader.load_external_contents(options)
     # |> IO.inspect(label:  titre_exerg("After Loader.load_external_contents/2"))
@@ -53,6 +53,16 @@ defmodule Pharkdown.Engine do
     File.write!(html_path, compile(phad_path))
   end
 
+  def compile_options(nil, options) do
+    # Options du programmeur
+    app_options = Keyword.merge(
+      @default_options, 
+      Application.get_env(:pharkdown, :options, [])
+    )
+    # Compilation de toutes les options
+    options ++ app_options
+  end
+
   def compile_options(path, options) do
     # Options générales
     options = compile_options(nil, options)
@@ -62,13 +72,5 @@ defmodule Pharkdown.Engine do
     options ++ file_infos
   end
 
-  def compile_options(nil, options) do
-    # Options du programmeur
-    app_options = Keyword.merge(
-      @default_options, 
-      Application.get_env(:pharkdown, :options, []
-      )
-    # Compilation de toutes les options
-    options ++ app_options
-  end
+
 end #/module Pharkdown.Engine

@@ -410,7 +410,7 @@ defmodule Pharkdown.Formatter do
   # imbriqués dans des chevrons, qui est une faute.
   @regex_insecable_guils ~r/([—–«] )?([—–«] )(.+?)( [—–!?:;»]+)( [—–!?:;»]+)?( [—–!?:;»]+)?/u
   @regex_insecable_tirets ~r/([—–])[  ](.+)[  ]([—–])/Uu
-  @regex_insecable_ponct ~r/\b([^ ]+) ([!?:;]+?)/Uu   ; @remp_insecable_ponct "<nowrap>\\1&nbsp;\\2</nowrap>"
+  @regex_insecable_ponct ~r/([^ ]+) ([!?:;]+?)/Uu   ; @remp_insecable_ponct "<nowrap>\\1&nbsp;\\2</nowrap>"
   def pose_anti_wrappers(string, options \\ []) do
     string
     # On doit commencer par mettre des espaces insécables là où

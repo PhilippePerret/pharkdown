@@ -17,7 +17,7 @@ defmodule Pharkdown.FormatterTest do
     Et un [lien](vers/cible)
     ~~~
     """
-    actual = Pharkdown.Engine.compile_string(code)
+    actual = Engine.compile_string(code)
     expect = """
     <pre><code lang="">
     Un *italique* non corrigé.

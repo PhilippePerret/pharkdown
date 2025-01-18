@@ -27,13 +27,13 @@ defmodule PharkdownCasSpeciauxTests do
     test "simple mot entre guillemets" do
       code = "— \"bonjour\" — !"
       actual = Engine.compile_string(code)
-      expect = "<div class=\"p\"><nowrap>— « bonjour » — !</nowrap>" |> T.h()
+      expect = "<div class=\"p\"><nowrap>— « bonjour » — !</nowrap></div>" |> T.h()
       assert actual == expect
     end
     test "plusieurs mots entre guillemets" do
       code = "— \"bonjour tout le monde\" — !"
       actual = Engine.compile_string(code)
-      expect = "<div class=\"p\">– « bonjour tout le <nowrap>monde » — !</nowrap>" |> T.h()
+      expect = "<div class=\"p\"><nowrap>— « bonjour</nowrap> tout le <nowrap>monde » — !</nowrap></div>" |> T.h()
       assert actual == expect
     end
 
