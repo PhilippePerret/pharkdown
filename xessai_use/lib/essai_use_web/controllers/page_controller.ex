@@ -5,8 +5,12 @@ defmodule EssaiUseWeb.PageController do
   # tous les fichirs .phad se trouvant dans le dossier 'page_html'.
   use Pharkdown
 
+  alias Transformer, as: T
+
   def home(conn, _params) do
-    render(conn, :home)
+    render(conn, :home, %{
+      texte_dynamique: "Ce texte est généré <dynamiquement> à l'aide de <code><%= ... %></code>"
+    })
   end
 
   def essai(_conn, _params) do

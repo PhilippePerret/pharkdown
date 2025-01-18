@@ -16,17 +16,20 @@
 # De nouveau un titre de niveau 1
 
 C'est une première page.
-
 J'ajoute une ligne au fichier phad.
+
+<%= @texte_dynamique %>
+
+La phrase ci-dessus est obtenue par le code `<%= @texte_dynamique %>`.
 
 ### Les Environnements
 
 #### Dictionnaire (`dictionary`)
 
 ~dictionary
-- Mon premier terme
-C'est ça définition qui suit, exactement.
-- Un autre terme aussi pour voir
+: Mon premier terme
+C'est sa définition qui suit, exactement.
+: Un autre terme aussi pour voir
 C'est le premier paragraphe de définition.
 Deuxième paragraphe de définition.
 dictionary~

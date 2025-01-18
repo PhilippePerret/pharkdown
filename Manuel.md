@@ -14,6 +14,30 @@ Pour ce faire, il suffit d'ajouter `use Pharkdown` au contrôleur qui doit utili
 
 ## Utilisation
 
+### Code EEx et composants HEX
+
+On peut, dans une page Pharkdown, utiliser les composants HEX (définis par `<.composant />`) ainsi que les codes `<%= operation %>`, qui ne seront qu'évalués au moment du chargement de la page (`render/3`).
+
+Noter que les textes ou autres produits par les code EEx ne passent pas par les formateurs *Pharkdown* à part s'ils sont appelés explicitement. On peut faire par exemple : 
+
+~~~
+defmodule MonAppWeb.PageController do
+  use MonAppWeb, :controller
+
+  alias Transformer, as: T
+
+  def home(conn, params) do
+    render(conn, :home, %{
+      message: "Mon <message> !" |> T.h()  # => "Mon <message>&amp;nbsp;!
+    })
+  end
+end
+~~~
+
+Noter, ci-dessus, que c'est idiot de faire ça puisque les textes donnés sont interprétés pour du HTML donc il y a double interprétation ici, ce qui produit le `&amp;nbsp;` (la méthode `T.h/1` produit `&nbsp;` à la place de l'insécable et Phoenix remplace sont `&` par un `&amp;`.
+
+> Rappel : Si des codes doivent être évalués (définitivement) à la compilation du fichier (transformation `.phad -> .html.heex`) il faut utiliser les [fonctions de transformation](#fonctions-transformation).
+
 ### Transformations automatiques
 
 #### Espaces insécables
@@ -235,3 +259,11 @@ smarties      Si true (default), corrige les guillemets, les appos-
 correct       Si true (default), corrige certaines fautes comme les
               mauvais exposants, les insécables oubliés, etc.
 ~~~
+
+<a name="fonctions-transformation"></a>
+
+### Fonctions de transformation
+
+Ce sont des fonctions qui permettent de produire du code à la compilation du fichier `.phad` au moment de sa transformation vers un fichier `.html.heex`.
+
+Ces fonctions sont définies dans le texte à l'aide de : `{{ monfonction(paramètres) }}` (les espaces ne sont pas obligatoires).
