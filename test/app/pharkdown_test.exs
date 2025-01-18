@@ -29,6 +29,41 @@ defmodule PharkdownTest do
     assert actual == expect
   end
 
+  test "Du code EEx répété doit être bien traité" do
+    code = """
+    <%= un code %>
+    <%= un code %>
+    `<%= un code %>`
+    """
+    actual = Engine.compile_string(code)
+    expect = """
+    <div class="p"><%= un code %></div>
+    <div class="p"><%= un code %></div>
+    <div class="p"><code><%= un code %></code></div>
+    """ |> String.trim()
+    assert actual == expect
+  end
+
+  test "Du code EEx sans sortie ne doit pas générer un paragraphe" do
+    code = "<% 2 + 4 %>"
+    actual = Engine.compile_string(code)
+    expect = "<% 2 + 4 %>"
+    assert actual == expect
+
+    code = """
+    Un paragraphe.
+    <% 2 + 4 %>
+    Un autre paragraphe.
+    """
+    actual = Engine.compile_string(code)
+    expect = """
+    <div class="p">Un paragraphe.</div>
+    <% 2 + 4 %>
+    <div class="p">Un autre paragraphe.</div>
+    """ |> String.trim()
+    assert actual == expect
+  end
+
   test "Traitement correct des codes dans le texte" do
     code = """
     ## Titre de niveau 2

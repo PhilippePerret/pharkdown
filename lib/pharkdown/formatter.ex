@@ -89,6 +89,7 @@ defmodule Pharkdown.Formatter do
     capture_slashed_caracters(texte, options)
     |> capture_hex_and_composants(options)
     |> capture_codes(options)
+    |> IO.inspect(label: "\nAprès capture des codes")
 
     # IO.inspect(slahed_signs, label: "\nTable Slahed_signs")
 
@@ -101,7 +102,9 @@ defmodule Pharkdown.Formatter do
     |> formate_exposants(options)
     # --- /Transformations ---
     # On remet tous les caractères échappés
+    |> IO.inspect(label: "Avant de remettre les codes de côté")
     |> replace_codes_beside(codes_beside, options)
+    |> IO.inspect(label: "Après avoir remis les codes de côté")
   end
 
   def formate(:paragraph, data, options) do
@@ -608,13 +611,22 @@ defmodule Pharkdown.Formatter do
   # Fonction qui, à la fin du formatage du texte, remet les codes mis
   # de côté, à commencer par les caractères échappés, les code hex et
   # les composants HEX
+  @regex_code_beside ~r/SLHSGN(?<index>[0-9]+)NGSHLS/
   defp replace_codes_beside(texte, [], _options), do: texte
   defp replace_codes_beside(texte, slashed_signs, _options) do
     slashed_signs
     |> Enum.with_index()
     |> Enum.reduce(texte, fn {sign, index}, accu ->
       remp = "SLHSGN#{index}NGSHLS"
-      String.replace(accu, remp, sign)
+      # Ici, dans sign, il peut y avoir des codes mis de côté
+      sign = if Regex.match?(@regex_code_beside, sign) do
+        %{"index" => index} = Regex.named_captures(@regex_code_beside, sign)
+        search = "SLHSGN#{index}NGSHLS"
+        index = String.to_integer(index)
+        srempl = Enum.at(slashed_signs, index)
+        String.replace(sign, search, srempl, [global: false])
+      else sign end
+      String.replace(accu, remp, sign, [global: false])
     end)
   end
 
