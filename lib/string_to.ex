@@ -20,17 +20,53 @@ defmodule StringTo do
 
   Transformations possibles :
 
-  "string"      => "string" (pas de transformation)
-  "200"         => 200
-  "1..100"      => 1..100
-  "20.0"        => 20.0
-  "true"        => true
-  "false"       => false
-  "nil"         => nil
-  "[<valeurs>]" => [<valeurs>] si possible
-  "50%"         => %{type: :pourcent, value: 50}
-  "50.2cm"      => %{type: :size, value: 50.2, unity: "cm"}
-    Ou autres unités : "po", "inc", "mm", "px"
+    // "string"      => "string" (pas de transformation)
+
+    iex> StringTo.value("string")
+    "string"
+
+    // "200"         => 200
+    iex> StringTo.value("200")
+    200
+
+    // "1..100"      => 1..100
+    iex> StringTo.value("1..100")
+    1..100
+
+    // "20.0"        => 20.0
+    iex> StringTo.value("20.0")
+    20.0
+
+    // "true"        => true
+    iex> StringTo.value("true")
+    true
+
+    // "false"       => false
+    iex> StringTo.value("false")
+    false
+
+    // "nil"         => nil
+    iex> StringTo.value("nil")
+    nil
+
+    // "[<valeurs>]" => [<valeurs>] si possible
+    iex> StringTo.value("[un, deux, trois]")
+    ["un", "deux", "trois"]
+
+    // "[<valeurs>]" => [<valeurs>] avec valeurs spéciales
+    iex> StringTo.value("[1, 1.2, true, nil]")
+    [1, 1.2, true, nil]
+
+    // "50%" => %{type: :pourcent, value: 50}
+    iex> StringTo.value("50%")
+    %{type: :pourcent, value: 50, raw_value: "50%"}
+
+    // "50.2cm"      => %{type: :size, value: 50.2, unity: "cm"}
+    // Ou autres unités : "po", "inc", "mm", "px"
+    iex> StringTo.value("50.2cm")
+    %{type: :size, value: 50.2, unity: "cm", raw_value: "50.2cm"}
+    iex> StringTo.value("10mm")
+    %{type: :size, value: 10, unity: "mm", raw_value: "10mm"}
 
   """
   def value(x) when is_binary(x) do
@@ -63,16 +99,47 @@ defmodule StringTo do
 
   Le string peut être sous la forme :
 
-    "" ou "  "              => []
-    "Un, deux, trois"       => ["Un", "deux", "trois"]
-    "Un, 12, true"          => ["Un", 12, true]
-    "Un, \"12\", \"true\""  => ["Un", "12", "true"]
-    "Un, :atom, "           => ["Un", :atom, ""]
-    "[Un, deux, trois]"     => ["Un", "deux", "trois"]
-    "[Un, 1.2, false]"      => ["Un", 1.2, false]
-    "Avec\, oui, non"       => ["Avec, oui", "non"]
-    "[Avec\, oui, non]"     => ["Avec, oui", "non"]
-    "[\"Un\", \"deux\"]"    => ["Un", "deux"]
+    // "" ou "  "              => []
+    iex> StringTo.list("")
+    []
+    iex> StringTo.list(" ")
+    []
+
+    // "Un, deux, trois" => ["Un", "deux", "trois"]
+    iex> StringTo.list("Un, deux, trois")
+    ["Un", "deux", "trois"]
+
+    // "Un, 12, true" => ["Un", 12, true]
+    iex> StringTo.list("Un, 12, true")
+    ["Un", 12, true]
+
+    // "Un, \"12\", \"true\""  => ["Un", "12", "true"]
+    iex> StringTo.list("Un, \\"12\\", \\"true\\"")
+    ["Un", "12", "true"]
+
+    // "Un, :atom, "           => ["Un", :atom, ""]
+    iex> StringTo.list("Un, :atom, ")
+    ["Un", :atom, ""]
+
+    // "[Un, deux, trois]" => ["Un", "deux", "trois"]
+    iex> StringTo.list("[Un, deux, trois]")
+    ["Un", "deux", "trois"]
+
+    // "[Un, 1.2, false]" => ["Un", 1.2, false]
+    iex> StringTo.list("[Un, 1.2, false]")
+    ["Un", 1.2, false]
+
+    // "Avec\, virgule, non"       => ["Avec, virgule", "non"]
+    iex> StringTo.list("Avec\\\\, virgule, non")
+    ["Avec, virgule", "non"]
+
+    // "[Avec\, oui, non]" => ["Avec, oui", "non"]
+    iex> StringTo.list("[Avec\\\\, oui, non]")
+    ["Avec, oui", "non"]
+
+    // "[\"Un\", \"deux\"]"    => ["Un", "deux"]
+    iex> StringTo.list("[\\"Un\\", \\"deux\\"]")
+    ["Un", "deux"]
 
   """
   def list(str) when is_binary(str) do
