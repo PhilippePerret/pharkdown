@@ -176,6 +176,7 @@ defmodule Pharkdown.Parser do
     # IO.inspect(string, label: "\nSTRING AU DÉPART")
     # note : toutes ces fonctions retourne +collector+
     collector
+    |> scan_lines_code_eex()
     |> scan_titres_in()
     |> scan_for_known_environments(options)
     # Il faut scanner les listes après les environnements car des 
@@ -312,6 +313,36 @@ defmodule Pharkdown.Parser do
       item = tag != ""  && [{:tag, tag} | item] || item
       item = [{:content, String.trim(content)} | item]
       [{:type, :paragraph} | item]
+    end
+  end
+
+  @doc """
+  Capture des lignes de codes entièrement EEx, donc qui commencent
+  par <% et qui terminent par %>
+
+  ## EXAMPLES
+
+    iex> Pharkdown.Parser.parse("<% 2 + 4 %>")
+    [ {:eex_line, [content: " 2 + 4 "]} ]
+
+    iex> Pharkdown.Parser.parse("Un paragraphe\\n<% 2 + 4 %>\\nUn autre paragraphe")
+    [ 
+      {:paragraph, [content: "Un paragraphe"]},
+      {:eex_line, [content: " 2 + 4 "]},
+      {:paragraph, [content: "Un autre paragraphe"]}
+    ]
+
+  """
+  @regex_code_eex_line ~r/^<%(.+)%>$/m
+  def scan_lines_code_eex(collector) do
+    case Regex.scan(@regex_code_eex_line, collector.texte) do
+      nil -> collector
+      res -> Enum.reduce(res, collector, fn groupes, collector -> 
+        [tout, code] = groupes
+        # Données pour le token
+        data = [content: code]
+        add_to_collector(collector, :eex_line, data, tout)
+      end)
     end
   end
 

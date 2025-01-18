@@ -37,8 +37,8 @@ defmodule PharkdownTest do
     """
     actual = Engine.compile_string(code)
     expect = """
-    <div class="p"><%= un code %></div>
-    <div class="p"><%= un code %></div>
+    <%= un code %>
+    <%= un code %>
     <div class="p"><code><%= un code %></code></div>
     """ |> String.trim()
     assert actual == expect

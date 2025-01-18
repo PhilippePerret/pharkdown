@@ -89,7 +89,7 @@ defmodule Pharkdown.Formatter do
     capture_slashed_caracters(texte, options)
     |> capture_hex_and_composants(options)
     |> capture_codes(options)
-    |> IO.inspect(label: "\nAprès capture des codes")
+    # |> IO.inspect(label: "\nAprès capture des codes")
 
     # IO.inspect(slahed_signs, label: "\nTable Slahed_signs")
 
@@ -102,15 +102,20 @@ defmodule Pharkdown.Formatter do
     |> formate_exposants(options)
     # --- /Transformations ---
     # On remet tous les caractères échappés
-    |> IO.inspect(label: "Avant de remettre les codes de côté")
+    # |> IO.inspect(label: "Avant de remettre les codes de côté")
     |> replace_codes_beside(codes_beside, options)
-    |> IO.inspect(label: "Après avoir remis les codes de côté")
+    # |> IO.inspect(label: "Après avoir remis les codes de côté")
   end
 
   def formate(:paragraph, data, options) do
     [{:type, :paragraph} | data]
     |> Parser.parse_line(options)
     |> formate_line(options)
+  end
+
+  # Une ligne de code à garder telle quelle
+  def formate(:eex_line, data, _options) do
+    "<%#{data[:content]}%>"
   end
 
   def formate(:title, data, _options) do
