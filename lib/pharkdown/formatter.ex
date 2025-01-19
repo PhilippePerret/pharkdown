@@ -275,6 +275,11 @@ defmodule Pharkdown.Formatter do
     iex> Pharkdown.Formatter.formate("[Mon autre lien](/vers/un/autre|class=exergue, style=font-size: 12pt)", [])
     "<a href=\\"/vers/un/autre\\" class=\\"exergue\\" style=\\"font-size: 12pt\\">Mon autre lien</a>"
 
+    - Lien avec route vérifiée
+
+    iex> Pharkdown.Formatter.formate("[lien route vérifiée]({/path/to/verified/route})", [])
+    ~s(<a href={~p"/path/to/verified/route"}>lien route vérifiée</a>)
+
     // -- Exposants ---
 
     iex> Pharkdown.Formatter.formate("1^er 1^re 1^ere 2^e 3^eme 4^ème 1^res 1^eres note^1 autre note^123a", [])
@@ -544,6 +549,7 @@ defmodule Pharkdown.Formatter do
   def __pour_le_doctest_de_la_fonction_href_links, do: nil
 
   @regex_links ~r/\[(?<title>.+)\]\((?<href>.+)(?:\|(?<params>.+))?\)/U
+  @regex_verified_route ~r/^\{(.+)\}$/
   defp formate_href_links(string, _options) do
     Regex.replace(@regex_links, string, fn _, title, href, params ->
       attributes =
@@ -558,8 +564,22 @@ defmodule Pharkdown.Formatter do
           |> (fn liste -> " " <> Enum.join(liste, " ") end).()
         end
       target = String.starts_with?(href, "http") && " target=\"_blank\"" || ""
+
+      # Transformation de href en fonction de son type, qui peut être
+      # normal ou avec route vérifiée
+      href = String.trim(href)
+      href =
+        case Regex.match?(@regex_verified_route, href) do
+        false -> ~s("#{href}")
+        true ->
+          route = Regex.scan(@regex_verified_route, href) |> Enum.at(0) |> Enum.at(1)
+          "{" <> (case String.starts_with?(route, "~p") do
+          true  -> route
+          false -> ~s(~p"#{route}")
+          end) <> "}"
+        end
     
-      "<a href=\"#{String.trim(href)}\"#{attributes}#{target}>#{title}</a>"
+      "<a href=#{href}#{attributes}#{target}>#{title}</a>"
     end)
   end
 

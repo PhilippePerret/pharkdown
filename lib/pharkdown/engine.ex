@@ -39,9 +39,9 @@ defmodule Pharkdown.Engine do
   """
   def compile_string(string, options \\ nil) when is_binary(string) do
     options = is_nil(options) && compile_options(nil, []) || options
-    debugit = false # options[:dgb] == true
+    debugit = options[:dgb] == true
     options = [ {:debug, debugit} | options]
-    |> inspect("Options", debugit)
+    # |> inspect("Options", debugit)
     string
     |> Loader.load_external_contents(options)
     |> inspect("After Loader.load_external_contents/2", debugit)
@@ -75,7 +75,6 @@ defmodule Pharkdown.Engine do
       @default_options, 
       Application.get_env(:pharkdown, :options, [])
     )
-    IO.inspect(options, label: "\nOptions")
     # Compilation de toutes les options
     options ++ app_options
   end
