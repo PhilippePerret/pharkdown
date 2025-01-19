@@ -18,11 +18,15 @@ defmodule Pharkdown.Engine do
   de rendre la page.
   """
   @impl true
-  def compile(path, options \\ []) do
+  def compile(path, _filename, options \\ []) do
+    # IO.inspect(path, label: "\nPATH in compile")
+    # IO.inspect(options, label: "\nOPTIONS in compile")
+
+    debugit = options[:debug] == true
 
     content = File.read!(path)
     options = compile_options(path, options)
-    |> IO.inspect(label: titre_exerg("OPTIONS"))
+    |> inspect("OPTIONS", debugit)
 
     quote do
       unquote(compile_string(content, options))
@@ -62,15 +66,16 @@ defmodule Pharkdown.Engine do
 
   # Crée le fichier +html_path+ à partir du fichier +phad_path+
   def compile_file(phad_path, html_path) do
-    File.write!(html_path, compile(phad_path))
+    File.write!(html_path, compile(phad_path, Path.basename(html_path)))
   end
 
   def compile_options(nil, options) do
-    # Options du programmeur
+    # Options du programmeur (config)
     app_options = Keyword.merge(
       @default_options, 
       Application.get_env(:pharkdown, :options, [])
     )
+    IO.inspect(options, label: "\nOptions")
     # Compilation de toutes les options
     options ++ app_options
   end
