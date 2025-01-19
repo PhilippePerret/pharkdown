@@ -178,6 +178,7 @@ defmodule Pharkdown.Parser do
     collector
     |> scan_lines_code_eex(options)
     |> scan_titres_in()
+    |> scan_lines_hr(options)
     |> scan_for_known_environments(options)
     # Il faut scanner les listes après les environnements car des 
     # environnements peuvent se trouver dans les listes (cf. N001)
@@ -452,6 +453,46 @@ defmodule Pharkdown.Parser do
       ]
       add_to_collector(coll, :list, data, index <> content)
     end)
+  end
+
+  @doc """
+  Permet d'écrire une ligne <hr /> (avec les paramètres fournis)
+
+  ## Examples
+
+    iex> Pharkdown.Parser.parse("---")
+    [ {:line_hr, [params: nil]} ]
+
+    iex> Pharkdown.Parser.parse("***")
+    [ {:line_hr, [params: nil]} ]
+
+    // Avec des paramètres
+
+    iex> Pharkdown.Parser.parse("---height:10px---")
+    [ {:line_hr, [params: "height:10px"]} ]
+
+    // Pas pris en compte dans un texte
+
+    iex> Pharkdown.Parser.parse("Dans un *** texte")
+    [ {:paragraph, [content: "Dans un *** texte"] } ]
+
+    iex> Pharkdown.Parser.parse("Dans un --- texte")
+    [ {:paragraph, [content: "Dans un --- texte"] } ]
+
+  """
+  @regex_line_hr ~r/^(\-\-\-|\*\*\*)(?:(.+)\1)?$/m
+  def scan_lines_hr(collector, _options) do
+    case Regex.scan(@regex_line_hr, collector.texte) do
+      nil -> collector
+      res -> Enum.reduce(res, collector, fn found, accu -> 
+        params = 
+          case Enum.count(found) do
+          2 -> nil
+          3 -> StringTo.map(Enum.at(found, 2))
+          end
+        add_to_collector(accu, :line_hr, [params: params], Enum.at(found, 0))
+      end)
+    end
   end
 
   # La dernière fonction qui va vraiment renvoyer les tokens,

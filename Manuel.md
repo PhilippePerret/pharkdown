@@ -101,7 +101,7 @@ Le texte avec un \n Retour à la ligne
 
 Note : les espaces autour du `\n` seront toujours supprimées.
 
-### Les lignes
+### Sauts de ligne
 
 Contrairement à Markdown — et c'est une des grandes différences —, on ne sépare pas les paragraphes par des doubles-retours chariot. Ainsi, le texte :
 
@@ -113,6 +113,17 @@ Mon deuxième paragraphe
 … sera interprété comme deux paragraphes distincts.
 
 Quand on doit vraiment forcément un retour à la ligne, on ajoute un `\n` comme on l'a vu précédemment.
+
+### Lignes de séparation
+
+Comme en *Markdown*, on peut écrire les lignes en *Pharkdown* à l'aide de `---` (ou `***` ici) quand ce signe se trouve seul sur une ligne.
+
+Mais avec *Pharkdown*, on peut styliser cette ligne :
+
+* Avec du style brut. Par exemple `---height:10px---` produira la ligne `<hr style="height:10px"/>`.
+* Avec du style par Map (ou Json). Par exemple `***%{height: "12px", size: "50%"}***` produira la ligne `<hr style="height:12px;size:50%;"/>`.
+* Par classes CSS. Par exemple `---.css1.css2---` produira la ligne `<hr class="css1 css2"\>`.
+
 
 ## Stylisation
 
@@ -265,6 +276,8 @@ smarties      Si true (default), corrige les guillemets, les appos-
               trophes.
 correct       Si true (default), corrige certaines fautes comme les
               mauvais exposants, les insécables oubliés, etc.
+debug         Si true, affiche des messages de déboguage (faux par
+              défaut)
 ~~~
 
 <a name="fonctions-transformation"></a>

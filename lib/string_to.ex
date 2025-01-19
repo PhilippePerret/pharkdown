@@ -141,8 +141,8 @@ defmodule StringTo do
     iex> StringTo.list("[\\"Un\\", \\"deux\\"]")
     ["Un", "deux"]
 
-    // "12, true, :atom, [1,2,3]" => [12, true, :atom, [1, 2, 3]]
-    iex> StringTo.list("12, true, :atom, [1,2,3]")
+    // "12, true, :atom, [1\,2\,3]" => [12, true, :atom, [1, 2, 3]]
+    iex> StringTo.list("12, true, :atom, [1\\\\,2\\\\,3]")
     [12, true, :atom, [1, 2, 3]]
 
   """
@@ -164,10 +164,98 @@ defmodule StringTo do
         end)
     end
   end
+
   def list(foo) do
     IO.inspect(foo, label: "\nN'est pas un string envoyé à StringTo.list")
     foo
   end
+
+  @doc """
+  Transformation d'un string en map
+
+  ## WARNING
+
+  Attention, cette fonction évalue le code fourni, donc elle ne doit
+  surtout pas être utilisée pour du code venant de l'extérieur.
+
+  ## Options
+
+  * `keys: :atoms` pour transformer les clés en atoms.
+  * `strict: true`. Par défaut, toutes les valeurs sont évaluées, 
+    c'est-à-dire que les "true", par exemple, deviennent des true.
+    Si `:strict` est à true (false par défaut), les valeurs ne sont
+    pas touchées et "true" reste un string.
+
+
+  ## Examples
+
+    iex> StringTo.map(~s({"un": "format", "comme": "json"}))
+    %{"un" => "format", "comme" => "json"}
+
+    iex> StringTo.map(~s({"un": "format", "comme": "json"}), [keys: :atoms])
+    %{un: "format", comme: "json"}
+
+    iex> StringTo.map(~s(%{un: "format", comme: "map"}))
+    %{un: "format", comme: "map"}
+
+    iex> StringTo.map(~s(%{"un" => "format", "comme" => "unemap"}))
+    %{"un" => "format", "comme" => "unemap"}
+
+    iex> StringTo.map(~s(%{"un" => "format", "comme" => "unemap"}), [keys: :atoms])
+    %{un: "format", comme: "unemap"}
+
+    // En tranformant (interprétant) les valeurs
+    iex> StringTo.map(~s({"un":"12", "deux":"true", "trois": ":atom"}))
+    %{"un" => 12, "deux" => true, "trois" => :atom}
+
+    // Sauf en mode :strict
+    iex> StringTo.map(~s({"un":"12", "deux":"true", "trois": ":atom"}), [strict: true])
+    %{"un" => "12", "deux" => "true", "trois" => ":atom"}
+
+    // Chaine vide
+    iex> StringTo.map("")
+    nil
+
+    // retourne la chaine en cas d'échec
+    iex> StringTo.map("height:10px;")
+    "height:10px;"
+
+  """
+  @reg_inner_json ~r/^\{.+\}$/
+  @reg_inner_map  ~r/^\%\{.+\}$/
+  def map(foo, options \\ []) do
+    map = 
+      cond do
+        foo =~ @reg_inner_json -> JSON.decode!(foo)
+        foo =~ @reg_inner_map  -> elem(Code.eval_string(foo), 0)
+        foo == "" -> nil
+        is_binary(foo) -> foo
+        true -> raise "Impossible d'évaluer #{inspect foo} comme une Map. Doit être au format JSON ou Elixir."
+      end
+    cond do
+    is_nil(map)     -> nil
+    is_binary(map)  -> map
+    true ->
+      # Sauf si l'option :strict est à true, on évalue toujours les
+      # valeurs
+      map =
+        if options[:strict] do
+          map
+        else
+          Enum.reduce(map, %{}, fn {x, y}, accu -> 
+            Map.put(accu, x, StringTo.value(y)) 
+          end)
+        end
+      if options[:keys] == :atoms do
+        Enum.reduce(map, %{}, fn {x, y}, accu ->
+          Map.put(accu, String.to_atom(x), StringTo.value(y))
+        end)
+      else
+        map
+      end
+    end
+  end
+
 
   @doc """
   Effectue les transformations d'usage sur les strings pour en faire
@@ -332,4 +420,34 @@ defmodule StringTo do
       end)
   end
 
+
+  @doc """
+  Transforme un string de la forme ".class.class.class" en liste de
+  classes CSS ou renvoie la chaine telle quelle.
+
+  # Examples
+
+    iex> StringTo.class_list(".css")
+    ["css"]
+
+    iex> StringTo.class_list(".css.class")
+    ["css", "class"]
+
+    iex> StringTo.class_list(".css .class")
+    ["css", "class"]
+
+    iex> StringTo.class_list("sans rien")
+    nil
+    
+  """
+  def class_list(foo, _options \\ []) do
+    cond do
+    String.match?(foo, ~r/\./) -> 
+      foo
+      |> String.split(".") 
+      |> Enum.map(fn x -> String.trim(x) end)
+      |> Enum.reject(fn x -> x == "" end)
+    true -> nil
+    end
+  end
 end

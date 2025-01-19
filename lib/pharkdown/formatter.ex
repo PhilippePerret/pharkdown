@@ -162,6 +162,30 @@ defmodule Pharkdown.Formatter do
     "<#{tag}>" <> accu.content <> "</#{tag}>"
   end
 
+
+  def formate(:line_hr, data, _options) do
+    params = data[:params]
+    params = cond do
+      is_nil(params) 
+        -> "" 
+      is_binary(params) and String.starts_with?(params, ".") 
+        -> ~s( class="#{StringTo.class_list(params)|> Enum.join(" ")}")
+      is_binary(params) 
+        -> ~s( style="#{params}")
+      is_map(params) ->
+        params =
+          Enum.map(params, fn {k, v} ->
+            v = cond do
+              is_binary(v) -> v
+              is_map(v) -> v.raw_value
+            end
+            "#{k}:#{v};" 
+          end) |> Enum.join("")
+        ~s( style="#{params}")
+      end
+    "<hr#{params}/>"
+  end
+
   # Formatage du type dictionary
   # ----------------------------
   # Pour les tests, cf. la fonction doctests_pour_formate_dictionary/0
