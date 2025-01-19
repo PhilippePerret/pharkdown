@@ -115,7 +115,14 @@ defmodule PharkdownTest do
     test "une fonction simple sur une ligne est évaluée" do
       code = "ma_fonction()"
       actual = Engine.compile_string(code)
-      expect = "Le retour de la fonction"
+      expect = "<div class=\"p\">Le retour de la fonction</div>"
+      assert actual == expect
+    end
+
+    test "une fonction 'post' n'est évaluée qu'à la fin" do
+      code = "post/fonction_post()"
+      actual = Engine.compile_string(code)
+      expect = "<div class=\"p\">*non traité*</div>"
       assert actual == expect
     end
   end
@@ -126,5 +133,8 @@ end
 defmodule Pharkdown.Helpers do
   def ma_fonction() do
     "Le retour de la fonction"
+  end
+  def fonction_post() do
+    "*non traité*"
   end
 end

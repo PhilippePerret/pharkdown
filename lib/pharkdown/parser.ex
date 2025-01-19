@@ -177,7 +177,6 @@ defmodule Pharkdown.Parser do
     # note : toutes ces fonctions retourne +collector+
     collector
     |> scan_lines_code_eex(options)
-    |> scan_custom_funcs_on_line(options)
     |> scan_titres_in()
     |> scan_for_known_environments(options)
     # Il faut scanner les listes après les environnements car des 
@@ -346,35 +345,7 @@ defmodule Pharkdown.Parser do
       end)
     end
   end
-
-  @doc """
-  Scan des fonctions personnalisées se trouvant seules sur une ligne.
-  Leur principale caractéristique, par rapport aux autres, est de ne
-  pas générer de paragraphe (sauf, bien sûr, si c'est ce qu'elles re-
-  tournent).
-
-  ## Examples
-
-    iex> Pharkdown.Parser.parse("mafonction()")
-    [ {:custom_func, [ name: "mafonction", params: [] ]} ]
-
-  """
-  @regex_custom_func_on_line ~r/^([a-z_]+)\((.*)\)$/U
-  def scan_custom_funcs_on_line(collector, _options) do
-    case Regex.scan(@regex_custom_func_on_line, collector.texte) do
-      nil -> collector
-      res -> Enum.reduce(res, collector, fn groupes, collector ->
-        [tout, fn_name, fn_params] = groupes
-        # Données pour le token
-        data = [
-          name:   fn_name |> String.trim() |> String.to_atom(),
-          params: StringTo.list(fn_params)
-        ]
-        add_to_collector(collector, :custom_func, data, tout)
-      end)
-    end
-  end
-
+  
   @doc """
   Scan des titres
 

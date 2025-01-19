@@ -105,6 +105,7 @@ defmodule Pharkdown.Formatter do
     # |> IO.inspect(label: "Avant de remettre les codes de côté")
     |> replace_codes_beside(codes_beside, options)
     # |> IO.inspect(label: "Après avoir remis les codes de côté")
+    |> treate_custom_post_functions(options)
   end
 
   def formate(:paragraph, data, options) do
@@ -116,11 +117,6 @@ defmodule Pharkdown.Formatter do
   # Une ligne de code à garder telle quelle
   def formate(:eex_line, data, _options) do
     "<%#{data[:content]}%>"
-  end
-
-  # Une ligne ne définissant qu'une fonction personnalisées
-  def formate(:custom_func, data, _options) do
-    apply(Pharkdown.Helpers, data[:name], data[:params])
   end
 
   def formate(:title, data, _options) do
@@ -648,15 +644,22 @@ defmodule Pharkdown.Formatter do
   Notes
     - Voir aussi les fonctions sur une ligne qui sont traités par le
       parser pour ne pas être considérées comme des paragraphes.
+    - Si une fonction doit être évaluée seulement à la fin, il faut 
+      lui mettre "post/" devant son nom.
   """
-  @regex_custom_functions ~r/([a-z_]+)\((.*)\)/U
-  def treate_custom_functions(string, _options) do
-    if Regex.match?(@regex_custom_functions, string) do
-      Regex.scan(@regex_custom_functions, string)
+  @regex_custom_pre_functions ~r/(?<!post\/)\b([a-z_]+)\((.*)\)/U
+  def treate_custom_pre_functions(string, options) do
+    treate_custom_functions(string, @regex_custom_pre_functions, options)
+  end
+  @regex_custom_post_functions ~r/post\/([a-z_]+)\((.*)\)/U
+  def treate_custom_post_functions(string, options) do
+    treate_custom_functions(string, @regex_custom_post_functions, options)
+  end
+  def treate_custom_functions(string, regex, _options) do
+    if Regex.match?(regex, string) do
+      Regex.scan(regex, string)
       |> Enum.reduce(string, fn found, string -> 
         [tout, fun_name, fun_params] = found
-        # rempl = "{{FONCTION À ÉVALUER: #{fun_name} avec les paramètres : #{inspect fun_params}}}"
-        # rempl = Code.eval_string(tout, )
         rempl = apply(Pharkdown.Helpers, String.to_atom(fun_name), StringTo.list(fun_params))
         String.replace(string, tout, rempl, [global: false])
       end)

@@ -41,12 +41,12 @@ defmodule Pharkdown.Engine do
     string
     |> Loader.load_external_contents(options)
     |> inspect("After Loader.load_external_contents/2", debugit)
+    |> Formatter.treate_custom_pre_functions(options)
+    |> inspect("After Formatter.treate_custom_pre_functions/2", debugit)
     |> Parser.parse(options)
     |> inspect("After Parser.parse/2", debugit)
     |> Formatter.formate(options)
     |> inspect("After Formatter.formate/2", debugit)
-    |> Formatter.treate_custom_functions(options)
-    |> inspect("After Formatter.treate_custom_functions/2", debugit)
     |> Formatter.very_last_correction(options)
     |> inspect("After Formatter.very_last_correction/2", debugit)
   end
