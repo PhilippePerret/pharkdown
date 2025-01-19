@@ -165,17 +165,61 @@ defmodule StringTo do
     foo
   end
 
-  # Fait les transformation d'usage dans les strings.
-  # à savoir :
-  #   les backstick par deux sont remplacés par des <code>
-  #   1^er  en exposant
-  #   *italique*
-  #   **gras**
-  #   __souligné__
-  #   --barré--
-  #   --barré//remplacé--
-  #
+  @doc """
+  Effectue les transformations d'usage sur les strings pour en faire
+  des chaines HTML valides.
 
+  ## Doctests
+
+    // Code (backsticks)
+    iex> StringTo.html("`du code`")
+    "<code>du code</code>"
+
+    // Gras et italique
+    iex> StringTo.html("***gras et italiques***")
+    "<b><em>gras et italiques</em></b>"
+
+    // Gras
+    iex> StringTo.html("**du gras**")
+    "<b>du gras</b>"
+
+    // Italique
+    iex> StringTo.html("*italique*")
+    "<em>italique</em>"
+
+    // Souligné
+    iex> StringTo.html("__souligné__")
+    "<u>souligné</u>"
+
+    // Substitution (correction/remplacement) : --bad//good--
+    iex> StringTo.html("--mauvais//remplacement--")
+    "<del>mauvais</del> <ins>remplacement</ins>"
+
+    // Barré
+    iex> StringTo.html("--barré--")
+    "<del>barré</del>"
+
+    // Exposant
+    iex> StringTo.html("2^e 1^er un^exposant")
+    "2<sup>e</sup> 1<sup>er</sup> un<sup>exposant</sup>"
+
+    // Guillemets
+    iex> StringTo.html("\\"bonjour\\"")
+    "« bonjour »"
+
+    # Simples retours chariots
+    iex> StringTo.html("Un \\\\n retour")
+    "Un<br />retour"
+
+    # Ligne (séparatrice)
+    iex> StringTo.html("---")
+    "<hr />"
+
+    # Anti-wrappings
+    iex> StringTo.html "bonjour !"
+    "<nowrap>bonjour !</nowrap>"
+
+  """
   # Ne pas oublier de mettre ici tous les "candidats", c'est-à-dire
   # tous les textes qui peuvent déclencher la correction.
   @reg_candidats_html ~r/[\`\*_\-\^\\\"\'\:\;\!\?]/
@@ -198,11 +242,13 @@ defmodule StringTo do
   #   ««« un mot ? »»»
   # et les transformer en :
   #   ««« un <nowrap>mot ?</nowrap>
-  # Note
-  # Penser qu'on peut avoir des styles, par exemple <em>un mot</em> 
-  # et qu'on ne peut donc pas utiliser le \b
+  @reg_ponct_nowrap ~r/(^| )([^ ]+)([  ])([!?:;])/U ; @temp_ponct_nowrap "\\1<nowrap>\\2\\3\\4</nowrap>"
+  # Notes
+  #   Penser qu'on peut avoir des styles, par exemple <em>un mot</em> 
+  #   et qu'on ne peut donc pas utiliser le \b
+  #   Il existe une version beaucoup plus complexe, traitant aussi
+  #   chevrons, les tirets, dans Pharkdown.
   #
-  @reg_ponct_nowrap ~r/ ([^ ]+)([  ])([!?:;])/U ; @temp_ponct_nowrap " <nowrap>\\1\\2\\3</nowrap>"
   # Si le <nowrap> ne se révèle pas efficace, utiliser plutôt :
   # @reg_ponct_nowrap ~r/ ([^ ]+)([  ])([!?:;])/U ; @temp_ponct_nowrap " <span class=\"nowrap\">\\1\\2\\3</span>"
 
