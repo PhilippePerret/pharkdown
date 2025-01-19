@@ -4,5 +4,6 @@ defmodule StringToTests do
   # alias Transformer, as: T
   
   doctest StringTo
+  doctest SafeString
 
 end

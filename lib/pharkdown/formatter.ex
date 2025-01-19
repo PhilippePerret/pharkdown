@@ -648,7 +648,7 @@ defmodule Pharkdown.Formatter do
         [tout, fun_name, fun_params] = found
         # rempl = "{{FONCTION À ÉVALUER: #{fun_name} avec les paramètres : #{inspect fun_params}}}"
         # rempl = Code.eval_string(tout, )
-        rempl = apply(Pharkdown.Helpers, String.to_atom(fun_name), [])
+        rempl = apply(Pharkdown.Helpers, String.to_atom(fun_name), StringTo.list(fun_params))
         String.replace(string, tout, rempl, [global: false])
       end)
       |> IO.inspect(label: "\nSTRING après fonctions")
