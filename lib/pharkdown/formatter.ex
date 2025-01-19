@@ -544,6 +544,16 @@ defmodule Pharkdown.Formatter do
     iex> Pharkdown.Formatter.formate("[lien stylé](path/to/lien|class=cssclass)", [])
     "<a href=\\"path/to/lien\\" class=\\"cssclass\\">lien stylé</a>"
 
+    - Liens de route vérifiée
+
+    iex> Pharkdown.Formatter.formate("[lien]({route/verified})", [])
+    ~s(<a href={~p"/route/verified"}>lien</a>)
+
+    iex> Pharkdown.Formatter.formate("[lien]({/route/verified})", [])
+    ~s(<a href={~p"/route/verified"}>lien</a>)
+
+    iex> Pharkdown.Formatter.formate("[lien]({~p/route/verified})", [])
+    ~s(<a href={~p"/route/verified"}>lien</a>)
 
   """
   def __pour_le_doctest_de_la_fonction_href_links, do: nil
@@ -574,8 +584,11 @@ defmodule Pharkdown.Formatter do
         true ->
           route = Regex.scan(@regex_verified_route, href) |> Enum.at(0) |> Enum.at(1)
           "{" <> (case String.starts_with?(route, "~p") do
-          true  -> route
-          false -> ~s(~p"#{route}")
+          true  -> 
+            String.replace(route, ~r/^~p(.+)$/, ~s(~p"\\1"))
+          false -> 
+            route = String.starts_with?(route, "/") && route || "/#{route}"
+            ~s(~p"#{route}")
           end) <> "}"
         end
     

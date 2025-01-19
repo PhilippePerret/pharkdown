@@ -74,7 +74,24 @@ Pour que ces corrections ne s'effectuent pas, mettre les [options](#options) à 
 
 ### Liens `[...](...)`
 
-Comme avec markdown, on peut utiliser le formatage `[titre](href)` pour créer des liens. Mais on peut aller plus loin en ajoutant après `href` des valeurs d'attributs à ajouter à la balise `<a>`. Tous les attributs doivent être séparés par des virgules (virgule-espace) et chaque élément doit être une paire `attribut=value` qui sera transformée en `attribut="value"` (ne pas mettre de guillemets, donc).
+Comme avec markdown, on peut utiliser le formatage `[titre](href)` pour créer des liens. 
+
+Mais on peut aller plus loin en utilisant le concept de *routes vérifiées* de Phoenix. il suffit pour ça de mettre le chemin relatif entre crochets :
+
+~~~
+[titre du lien]({vers/route/verifiee})
+~~~
+
+Ce marquage sera transformé en :
+
+~~~html
+<a href={~p"/vers/route/verfiee"}>
+~~~
+
+* Noter que le "/" manquant au début a été ajouté automatiquement.
+* Noter qu'il ne faut surtout pas de guillemets dans les parenthèses, même après le `~p` s'il est utilisé : `[lien]({~p/path/to/verified})`
+
+Mais on peut aller encore plus loin en ajoutant après `href` des valeurs d'attributs à ajouter à la balise `<a>`. Tous les attributs doivent être séparés par des virgules (virgule-espace) et chaque élément doit être une paire `attribut=value` qui sera transformée en `attribut="value"` (ne pas mettre de guillemets, donc).
 
 ~~~~
 [titre](path/to/ca) # => "<a href="path/to/ca">titre</a>"
