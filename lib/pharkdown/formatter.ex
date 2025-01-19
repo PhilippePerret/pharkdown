@@ -118,6 +118,11 @@ defmodule Pharkdown.Formatter do
     "<%#{data[:content]}%>"
   end
 
+  # Une ligne ne définissant qu'une fonction personnalisées
+  def formate(:custom_func, data, _options) do
+    apply(Pharkdown.Helpers, data[:name], data[:params])
+  end
+
   def formate(:title, data, _options) do
     "<h#{data[:level]}>#{data[:content]}</h#{data[:level]}>"
   end
@@ -639,6 +644,10 @@ defmodule Pharkdown.Formatter do
   Fonction qui traite les fonctions utilisateurs dans le code initial
   du fichier. Note : Ça se passe en tout début, avant le parsing du
   code.
+
+  Notes
+    - Voir aussi les fonctions sur une ligne qui sont traités par le
+      parser pour ne pas être considérées comme des paragraphes.
   """
   @regex_custom_functions ~r/([a-z_]+)\((.*)\)/U
   def treate_custom_functions(string, _options) do

@@ -35,17 +35,27 @@ defmodule Pharkdown.Engine do
   """
   def compile_string(string, options \\ nil) when is_binary(string) do
     options = is_nil(options) && compile_options(nil, []) || options
+    debugit = false # options[:dgb] == true
+    options = [ {:debug, debugit} | options]
+    |> inspect("Options", debugit)
     string
     |> Loader.load_external_contents(options)
-    # |> IO.inspect(label:  titre_exerg("After Loader.load_external_contents/2"))
-    |> Formatter.treate_custom_functions(options)
-    # |> IO.inspect(label:  titre_exerg("After Formatter.treate_custom_functions/2"))
+    |> inspect("After Loader.load_external_contents/2", debugit)
     |> Parser.parse(options)
-    # |> IO.inspect(label: titre_exerg("After Parser.parse/2"))
+    |> inspect("After Parser.parse/2", debugit)
     |> Formatter.formate(options)
-    # |> IO.inspect(label: titre_exerg("After Formatter.formate/2"))
+    |> inspect("After Formatter.formate/2", debugit)
+    |> Formatter.treate_custom_functions(options)
+    |> inspect("After Formatter.treate_custom_functions/2", debugit)
     |> Formatter.very_last_correction(options)
-    # |> IO.inspect(label: titre_exerg("After Formatter.very_last_correction/2"))
+    |> inspect("After Formatter.very_last_correction/2", debugit)
+  end
+
+  defp inspect(contenu, titre, debug) do
+    if debug do
+      IO.inspect(contenu, label:  titre_exerg(titre))
+    end
+    contenu
   end
 
   defp titre_exerg(str), do: IO.ANSI.green() <> "\n#{str}\n" <> IO.ANSI.reset()

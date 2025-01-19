@@ -115,15 +115,16 @@ defmodule PharkdownTest do
     test "une fonction simple sur une ligne est évaluée" do
       code = "ma_fonction()"
       actual = Engine.compile_string(code)
-      expect = "Le code de la fonction"
+      expect = "Le retour de la fonction"
       assert actual == expect
     end
   end
 
 end
 
+# --- Pour tester les fonctions personnalisées ---
 defmodule Pharkdown.Helpers do
   def ma_fonction() do
-    "Le code de la fonction"
+    "Le retour de la fonction"
   end
 end

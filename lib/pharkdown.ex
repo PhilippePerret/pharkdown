@@ -2,8 +2,6 @@ defmodule Pharkdown do
   @moduledoc """
   Documentation for `Pharkdown`.
   """
-
-
   # Pour savoir si le programme a été changé
   @last_pharkdown_modify_datetime  ["engine.ex", "formatter.ex", "loader.ex","parser.ex"]
     |> Enum.reduce(%{datetime: NaiveDateTime.new!(~D[2025-01-12], ~T[06:36:00])}, fn name, accu ->
