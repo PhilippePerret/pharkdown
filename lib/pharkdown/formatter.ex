@@ -660,10 +660,14 @@ defmodule Pharkdown.Formatter do
       Regex.scan(regex, string)
       |> Enum.reduce(string, fn found, string -> 
         [tout, fun_name, fun_params] = found
-        rempl = apply(Pharkdown.Helpers, String.to_atom(fun_name), StringTo.list(fun_params))
+        fun_params = cond do
+          fun_params == "" -> []
+          fun_params =~ ~r/^\[(.+)\]$/ -> [StringTo.list(fun_params)]
+          true -> StringTo.list(fun_params)
+          end
+        rempl = apply(Pharkdown.Helpers, String.to_atom(fun_name), fun_params)
         String.replace(string, tout, rempl, [global: false])
       end)
-      |> IO.inspect(label: "\nSTRING après fonctions")
     else
       string
     end

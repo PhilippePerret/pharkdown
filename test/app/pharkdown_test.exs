@@ -112,6 +112,7 @@ defmodule PharkdownTest do
   end
 
   describe "Traitement des fonctions personnalisées" do
+
     test "une fonction simple sur une ligne est évaluée" do
       code = "ma_fonction()"
       actual = Engine.compile_string(code)
@@ -120,12 +121,35 @@ defmodule PharkdownTest do
     end
 
     test "une fonction 'post' n'est évaluée qu'à la fin" do
+
       code = "post/fonction_post()"
       actual = Engine.compile_string(code)
       expect = "<div class=\"p\">*non traité*</div>"
       assert actual == expect
+      
+      # La même sans être "post"
+      code = "fonction_post()"
+      actual = Engine.compile_string(code)
+      expect = "<div class=\"p\"><em>non traité</em></div>"
+      assert actual == expect
+    
     end
-  end
+
+    test "les paramètres d'une fonction sont bien traités" do
+      code = "dit([Bonjour, tout, le, monde])"
+      actual = Engine.compile_string(code)
+      expect = "<div class=\"p\">Bonjour tout le monde</div>"
+      assert actual == expect
+    end
+
+    test "une fonction avec paramètres variés" do
+      code    = "traite(12, true, [1\\, 2\\, 3])"
+      actual  = Engine.compile_string(code)
+      expect  = "<div class=\"p\">12, vrai et la liste [1, 2, 3]</div>"
+      assert actual == expect
+    end
+
+  end #/describe fonctions personnalisées
 
 end
 
@@ -136,5 +160,12 @@ defmodule Pharkdown.Helpers do
   end
   def fonction_post() do
     "*non traité*"
+  end
+  def dit(liste) do
+    Enum.join(liste, " ")
+  end
+
+  def traite(chiffre, booleen, liste) when is_integer(chiffre) and is_boolean(booleen) and is_list(liste) do
+    "#{chiffre}, #{booleen && "vrai" || "false"} et la liste #{inspect liste}"
   end
 end

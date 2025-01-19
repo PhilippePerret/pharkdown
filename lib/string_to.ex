@@ -141,6 +141,10 @@ defmodule StringTo do
     iex> StringTo.list("[\\"Un\\", \\"deux\\"]")
     ["Un", "deux"]
 
+    // "12, true, :atom, [1,2,3]" => [12, true, :atom, [1, 2, 3]]
+    iex> StringTo.list("12, true, :atom, [1,2,3]")
+    [12, true, :atom, [1, 2, 3]]
+
   """
   def list(str) when is_binary(str) do
     trimed_str = String.trim(str)

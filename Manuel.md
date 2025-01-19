@@ -271,6 +271,63 @@ correct       Si true (default), corrige certaines fautes comme les
 
 ### Fonctions de transformation
 
-Ce sont des fonctions qui permettent de produire du code à la compilation du fichier `.phad` au moment de sa transformation vers un fichier `.html.heex`.
+Une des fonctionnalités puissante de *Pharkdown* est de pouvoir utiliser des fonctions elixir pour insérer du code. Ces fonctions permettent donc de produire du code à la compilation du fichier `.phad`, au moment de sa transformation vers un fichier `.html.heex`.
 
-Ces fonctions sont définies dans le texte à l'aide de : `{{ monfonction(paramètres) }}` (les espaces ne sont pas obligatoires).
+Il existe deux types de fonction :
+
+* Le type "normal", qui est évalué en début de traitement et permet donc d'insérer du code `.phad` qui sera traité comme tout contenu du fichier.
+* Le type "post" qui sera évalué à la toute fin de la transformation et ne sera donc pas traité comme le reste du contenu. On identifie ces fonctions (le moins courantes, dans une utilisation normale) à l'aide du préfixe `post/`. Par exemple `post/ma_fonction_apres()`.
+
+Ces fonctions doivent toutes être définies dans un module `Pharkdown.Helpers` accessible (donc placé quelque part dans le dossier `lib` de l'application). On la définit comme une fonction normale qui a accès à tous les éléments de l'application.
+
+~~~elixir
+defmodule Pharkdown.Helpers do
+
+  def mafonction(arg1, arg2… argN) do
+    ... traitement ...
+    "sortie de la fonction" # à inscrire dans le document
+  end
+
+  def autre_fonction() do
+    ...
+  end
+
+  def une_fonction_post(arg1… argN) do
+    ...
+  end
+end
+~~~
+
+Le **nom d'une fonction** est impérativement construit avec des minuscules et des traits plats, rien d'autre.
+
+Les arguments sont évalués à l'aide de l'extension `StringTo` (`StringTo.list`) et peuvent donc ne pas comporter de guillemets. Par exemple :
+
+~~~
+dit([bonjour, tout, le, monde])
+~~~
+
+… sera interprété comme : 
+
+~~~elixir
+dit(["bonjour", "tout", "le", "monde"])
+~~~
+
+Attention : si les arguments contiennent des virgules qu'il faut garder, il faut les échapper :
+
+~~~
+dit(Bonjour\, ça va ?)
+~~~
+
+Dans le cas contraire, *pharkdown* pensera qu'il s'agit de deux paramètres, "Bonjour" et "ça va ?".
+
+C'est important pour des listes dans une suite de paramètres :
+
+~~~
+dit(Sais-tu jouer à, [1\, 2\, 3], soleil)
+~~~
+
+Ci-dessus, la fonction `dit` recevra : 
+
+~~~
+dit("Sais-tu jouer à", [1, 2, 3], "soleil")
+~~~
