@@ -1,0 +1,11 @@
+# Bienvenue !
+
+Sur ce site, je partage mon exploration du [framework Phoenix/Elixir](https://www.phoenixframework.org). Il est né de l'envie de partager de façon bien sûr, mais aussi de palier l'absence presque totale de documentation ou d'aide sur le framework dans la langue de [Molière](https://fr.wikipedia.org/wiki/Molière).
+
+Voilà ce que vous pouvez y trouver :
+
+~dictionary
+: [Application TASKER, première exploration]({explorer/tasker})
+C'est une toute première exploration, par la fabrication d'une première application complète, _TASKER_, après avoir feuilleté pas mal de documentation (mais je reviens sur tous les points). Quelques tables.
+Sujets : découverte de du framework Phoenix, tables avec association, algorithme de tri.
+dictionary~

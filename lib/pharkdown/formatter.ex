@@ -189,11 +189,11 @@ defmodule Pharkdown.Formatter do
   # Formatage du type dictionary
   # ----------------------------
   # Pour les tests, cf. la fonction doctests_pour_formate_dictionary/0
-  def formate(:dictionary, data, _options) do
+  def formate(:dictionary, data, options) do
     # IO.puts("-> formate(:dictionary\navec data: #{inspect data})")
     "<dl>" <> (data[:content]
     |> Enum.map(fn par ->
-      formate_dict_element(par[:type], par[:content])
+      formate_dict_element(par[:type], par[:content]|>formate(options))
     end)
     |> Enum.join("")) <> "</dl>"
   end
@@ -346,10 +346,15 @@ defmodule Pharkdown.Formatter do
 
   @doc """
   Tests pour la méthode formate/3 pour un dictionnaire
+
   ## Example
   
     iex> Pharkdown.Formatter.formate(:dictionary, [type: :dictionary, content: [[type: :term, content: "Un terme à expliquer"], [type: :definition, content: "La définition du terme."]]], [])
     "<dl><dt>Un terme à expliquer</dt><dd>La définition du terme.</dd></dl>"
+
+    - L'intérieur d'un dictionnaire est corrigé correctement
+    iex> Engine.compile_string("~dictionary\\n:Un [lien]({vers/verified/route})\\nLa *définition* pour --voir//contrôler--.\\ndictionary~")
+    ~s(<dl><dt>Un <a href={~p"/vers/verified/route"}>lien</a></dt><dd>La <em>définition</em> pour <del>voir</del> <ins>contrôler</ins>.</dd></dl>)
   
   """  
   def doctests_pour_formate_dictionary, do: nil
@@ -358,15 +363,15 @@ defmodule Pharkdown.Formatter do
   defp formate_dict_element(:definition, content), do: "<dd>#{content}</dd>"
 
   # Traitement des guillemets droits
-  @regex_guillemets ~r/"(.+)"/U   ; @remp_guillemets "« \\1 »"
-  @regex_apostrophes ~r/'/U       ; @remp_apostrophes "’"
+  @regex_guillemets ~r/"(.+)"/U   ; @rempl_guillemets "« \\1 »"
+  @regex_apostrophes ~r/'/U       ; @rempl_apostrophes "’"
   defp formate_smart_guillemets(string, options) do
     if options[:smarties] == false do
       string
     else
       string
-      |> String.replace(@regex_guillemets, @remp_guillemets)
-      |> String.replace(@regex_apostrophes, @remp_apostrophes)
+      |> String.replace(@regex_guillemets, @rempl_guillemets)
+      |> String.replace(@regex_apostrophes, @rempl_apostrophes)
     end
   end
 
@@ -449,7 +454,7 @@ defmodule Pharkdown.Formatter do
   # imbriqués dans des chevrons, qui est une faute.
   @regex_insecable_guils ~r/([—–«] )?([—–«] )(.+?)( [—–!?:;»]+)( [—–!?:;»]+)?( [—–!?:;»]+)?/u
   @regex_insecable_tirets ~r/([—–])[  ](.+)[  ]([—–])/Uu
-  @regex_insecable_ponct ~r/([^ ]+) ([!?:;]+?)/Uu   ; @remp_insecable_ponct "<nowrap>\\1&nbsp;\\2</nowrap>"
+  @regex_insecable_ponct ~r/([^ ]+) ([!?:;]+?)/Uu   ; @rempl_insecable_ponct "<nowrap>\\1&nbsp;\\2</nowrap>"
   def pose_anti_wrappers(string, options \\ []) do
     string
     # On doit commencer par mettre des espaces insécables là où
@@ -460,7 +465,7 @@ defmodule Pharkdown.Formatter do
     |> string_replace(@regex_insecable_guils, &antiwrappers_guils_et_autres/7, options)
     # |> string_replace(@regex_insecable_guils, options)
     |> string_replace(@regex_insecable_tirets, options)
-    |> String.replace(@regex_insecable_ponct, @remp_insecable_ponct)
+    |> String.replace(@regex_insecable_ponct, @rempl_insecable_ponct)
   end
 
   # Fonction traitant les anti-wrappers sur les strings avec guillemets
@@ -516,17 +521,36 @@ defmodule Pharkdown.Formatter do
     end
   end
 
+  @doc """
+  Formatage des styles simples
 
-  @regex_gras_italic ~r/\*\*\*(.+)\*\*\*/U  ; @remp_gras_italic "<strong><em>\\1</em></strong>"
-  @regex_graisse ~r/\*\*(.+)\*\*/U          ; @remp_graisse "<strong>\\1</strong>"
-  @regex_italics ~r/\*([^ \t].+)\*/U        ; @remp_italics "<em>\\1</em>"
-  @regex_underscore ~r/__(.+)__/U           ; @remp_underscore "<u>\\1</u>"
-  defp formate_simples_styles(string, _options) do
+  ## Examples
+
+    - Les italiques avec *italiques*
+    iex> Formatter.formate_simples_styles("*italique*", [])
+    "<em>italique</em>"
+
+    - Les gras avec **gras**
+    iex> Formatter.formate_simples_styles("**gras**", [])
+    "<strong>gras</strong>"
+
+    - Les insertions/suppressions avec --supp//add--
+    iex> Formatter.formate_simples_styles("--supprimer//corrigé-- --sup//ins--", [])
+    "<del>supprimer</del> <ins>corrigé</ins> <del>sup</del> <ins>ins</ins>"
+
+  """
+  @regex_gras_italic ~r/\*\*\*(.+)\*\*\*/U  ; @rempl_gras_italic "<strong><em>\\1</em></strong>"
+  @regex_graisse ~r/\*\*(.+)\*\*/U          ; @rempl_graisse "<strong>\\1</strong>"
+  @regex_italics ~r/\*([^ \t].+)\*/U        ; @rempl_italics "<em>\\1</em>"
+  @regex_underscore ~r/__(.+)__/U           ; @rempl_underscore "<u>\\1</u>"
+  @regexp_del_ins ~r/\-\-(.+)\/\/(.+)\-\-/U ; @rempl_del_ins "<del>\\1</del> <ins>\\2</ins>"
+  def formate_simples_styles(string, _options) do
     string
-    |> String.replace(@regex_gras_italic, @remp_gras_italic)
-    |> String.replace(@regex_graisse, @remp_graisse)
-    |> String.replace(@regex_italics, @remp_italics)
-    |> String.replace(@regex_underscore, @remp_underscore)
+    |> String.replace(@regexp_del_ins, @rempl_del_ins)
+    |> String.replace(@regex_gras_italic, @rempl_gras_italic)
+    |> String.replace(@regex_graisse, @rempl_graisse)
+    |> String.replace(@regex_italics, @rempl_italics)
+    |> String.replace(@regex_underscore, @rempl_underscore)
   end
 
   @doc """
@@ -558,9 +582,22 @@ defmodule Pharkdown.Formatter do
   """
   def __pour_le_doctest_de_la_fonction_href_links, do: nil
 
+  @doc """
+  Formatage des liens [titre](url|properties)
+
+  ## Examples
+
+    (voir aussi les exemples ci-dessus)
+
+    iex> Pharkdown.Engine.compile_string("[mon lien]({explorer/tasker})")
+    ~s(<div class="p"><a href={~p"/explorer/tasker"}>mon lien</a></div>)
+
+  """
   @regex_links ~r/\[(?<title>.+)\]\((?<href>.+)(?:\|(?<params>.+))?\)/U
   @regex_verified_route ~r/^\{(.+)\}$/
-  defp formate_href_links(string, _options) do
+  def formate_href_links(string, _options) do
+    # IO.puts "-> formate_href_links (avec :"
+    # IO.inspect(string)
     Regex.replace(@regex_links, string, fn _, title, href, params ->
       attributes =
         if params == "" do
@@ -751,13 +788,13 @@ defmodule Pharkdown.Formatter do
 
   bon…)
   """
-  @regex_returns ~r/( +)?\\n( +)?/    ; @remp_returns "<br />"
-  @regex_protected_guils ~r/\{\{GL\}\}/ ; @remp_protected_guils "\""
+  @regex_returns ~r/( +)?\\n( +)?/    ; @rempl_returns "<br />"
+  @regex_protected_guils ~r/\{\{GL\}\}/ ; @rempl_protected_guils "\""
   def very_last_correction(string, _options) do
     # IO.inspect(string, label: "[very_last_correction] String au début")
     string
-    |> String.replace(@regex_returns, @remp_returns)
-    |> String.replace(@regex_protected_guils, @remp_protected_guils)
+    |> String.replace(@regex_returns, @rempl_returns)
+    |> String.replace(@regex_protected_guils, @rempl_protected_guils)
     # |> IO.inspect(label: "[very_last_correction] String à la fin")
   end
 

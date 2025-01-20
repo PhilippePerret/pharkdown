@@ -12,7 +12,7 @@ defmodule Pharkdown do
       NaiveDateTime.after?(datetime, accu.datetime) && %{ accu | datetime: datetime } || accu
     end)
     |> Map.get(:datetime)
-    # |> IO.inspect(label: "\n@last_pharkdown_modify_datetime")
+    |> IO.inspect(label: "\n@last_pharkdown_modify_datetime")
   
 
   def phad_files_in_folder(template_folder) do
@@ -52,7 +52,7 @@ defmodule Pharkdown do
       true -> %{acc | oks: acc.oks ++ [ dfile ] }
       end
     end)
-    # |> IO.inspect(label: "Répartition des fichiers")
+    |> IO.inspect(label: "Répartition des fichiers")
   end
   
   def update_phad_files(phad_data) do
@@ -96,7 +96,7 @@ defmodule Pharkdown do
   end
 
   defmacro __using__(options) do
-
+    IO.puts "-> Pharkdown.__using__"
     path_folder_html = String.replace(__CALLER__.file, ~r/_controller\.ex$/, "_html")
   
     quote bind_quoted: [options: options, path_folder_html: path_folder_html] do

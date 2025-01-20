@@ -3,7 +3,7 @@ defmodule Pharkdown.FormatterTest do
   use ExUnit.Case
 
   alias Pharkdown.Engine
-  # alias Pharkdown.Formatter
+  alias Pharkdown.Formatter
 
   alias Transformer, as: T
   
