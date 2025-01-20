@@ -45,8 +45,6 @@ defmodule Pharkdown.Engine do
     string
     |> Loader.load_external_contents(options)
     |> inspect("After Loader.load_external_contents/2", debugit)
-    |> Formatter.treate_custom_pre_functions(options)
-    |> inspect("After Formatter.treate_custom_pre_functions/2", debugit)
     |> Parser.parse(options)
     |> inspect("After Parser.parse/2", debugit)
     |> Formatter.formate(options)

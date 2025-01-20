@@ -24,31 +24,31 @@ defmodule Pharkdown.Formatter do
 
     // Simple paragraphe
     iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe."])
-    "<div class=\\"p\\">Mon simple paragraphe.</div>"
+    ~s(<div class="p">Mon simple paragraphe.</div>)
 
     // Paragraphe avec 1 classe css
     iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", class: ["maClasse"]])
-    "<div class=\\"p maClasse\\">Mon simple paragraphe.</div>"
+    ~s(<div class="p maClasse">Mon simple paragraphe.</div>)
   
     // Paragraphe avec 2 classes css
     iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", class: ["maClasse", "autre-classe"]])
-    "<div class=\\"p maClasse autre-classe\\">Mon simple paragraphe.</div>"
+    ~s(<div class="p maClasse autre-classe">Mon simple paragraphe.</div>)
   
     // Paragraphe avec identifiant
     iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", id: "monPar"])
-    "<div id=\\"monPar\\" class=\\"p\\">Mon simple paragraphe.</div>"
+    ~s(<div id="monPar" class="p">Mon simple paragraphe.</div>)
 
     // Paragraphe avec tag spéciale
     iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", tag: "latag"])
-    "<latag class=\\"p\\">Mon simple paragraphe.</latag>"
+    ~s(<latag class="p">Mon simple paragraphe.</latag>)
 
     // Paragraphe avec tag spéciale, id et classes css
     iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon simple paragraphe.", tag: "latag", id: "monPar", class: ["class1", "class2"]])
-    "<latag id=\\"monPar\\" class=\\"p class1 class2\\">Mon simple paragraphe.</latag>"
+    ~s(<latag id="monPar" class="p class1 class2">Mon simple paragraphe.</latag>)
 
     // Test avec de l'italique et de l'insécable
     iex> Pharkdown.Formatter.formate_line([type: :paragraph, content: "Mon *simple* paragraphe !", id: "parWithItal"])
-    "<div id=\\"parWithItal\\" class=\\"p\\">Mon <em>simple</em> <nowrap>paragraphe&nbsp;!</nowrap></div>"
+    ~s(<div id="parWithItal" class="p">Mon <em>simple</em> <nowrap>paragraphe&nbsp;!</nowrap></div>)
     
   """
   def formate_line(item, options \\ []) do
@@ -95,6 +95,7 @@ defmodule Pharkdown.Formatter do
 
     texte
     # |> IO.inspect(label: "\nTEXTE POUR TRANSFORMATIONS")
+    |> treate_custom_pre_functions(options)
     |> formate_smart_guillemets(options)
     |> pose_anti_wrappers(options)
     |> formate_simples_styles(options)
@@ -732,8 +733,10 @@ defmodule Pharkdown.Formatter do
 
   @doc """
   Fonction qui traite les fonctions utilisateurs dans le code initial
-  du fichier. Note : Ça se passe en tout début, avant le parsing du
-  code.
+  du fichier. 
+  Note : Ça NE se passe PLUS en tout début, avant le parsing du
+  code, car alors toutes les fonctions, même dans les codes EEx ou les
+  blocs de code, seraient traitées.
 
   Notes
     - Voir aussi les fonctions sur une ligne qui sont traités par le

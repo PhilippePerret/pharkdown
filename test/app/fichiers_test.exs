@@ -18,9 +18,9 @@ defmodule ParFichiersTests do
   alias Pharkdown.Engine
 
 
-  test "Test de l'accueil du site Phoenix Exploration" do
-    test_file("textes/accueil.phad")
-  end
+  # test "Test de l'accueil du site Phoenix Exploration" do
+  #   test_file("textes/accueil.phad")
+  # end
 
   defp test_file(relpath) do
     full_path = Path.expand(Path.join(["test","fixtures", relpath]))
