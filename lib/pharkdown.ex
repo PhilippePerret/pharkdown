@@ -1,7 +1,24 @@
 defmodule Pharkdown do
   @moduledoc """
-  Documentation for `Pharkdown`.
+  
   """
+
+  @doc """
+  ## Construction du manuel HTML
+
+  Lancer cette commande pour construire le manuel HTML de l'extension
+  et l'ouvrir dans votre navigateur préféré.
+
+  """
+  def build_manuel(on_the_fly_options \\ []) do
+    options = [
+      css: ~s(<link rel="stylesheet" type="text/css" href="priv/static/css/themes/pharkdown.css">\n),
+      full_html: true
+    ]
+    options = Keyword.merge(options, on_the_fly_options)
+    Pharkdown.Engine.compile_file("Manuel.phad", "Manuel.html", options)
+  end
+
   # Pour savoir si le programme a été changé
   @last_pharkdown_modify_datetime  ["engine.ex", "formatter.ex", "loader.ex","parser.ex"]
     |> Enum.reduce(%{datetime: NaiveDateTime.new!(~D[2025-01-12], ~T[06:36:00])}, fn name, accu ->

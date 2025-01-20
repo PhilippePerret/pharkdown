@@ -10,17 +10,42 @@ nowrap {white-space:nowrap;}
 
 h1, h2, h3, h4, h5 {
   font-weight: normal;
-  margin-top: 4em;
 }
 h1 {
   font-size: 48pt;
+  margin-top:0;
 }
 h2 {
   font-size: 40pt;
+  margin-top: 3em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #CCCCCC;
+}
+h1 + h2 {
+  margin-top: 1em;
 }
 h3 {
   font-size: 32pt;
+  margin-top: 2em;
 }
+h4 {
+  font-size: 28pt;
+  margin-top: 1.5em;
+}
+h5 {
+  margin-top: 1em;
+}
+
+/* --- Styles généraux --- */
+
+a, a:link, a:visited, a:hover {
+  text-decoration: none;
+  color: rgb(16, 69, 162);
+}
+a:hover {
+  border-bottom: 1px solid #8888FF;
+}
+
 
 /* === Paragraphes === */
 
@@ -32,11 +57,16 @@ div.p {
 /* === Code === */
 
 code {
-  background-color: #CDCDCD;
+  background-color: #ebebeb;
+  padding: 0 4px;
 }
-pre + code {
+pre {
+  padding: 0 1em 1em;
+}
+pre, pre code {
   background-color: #333333;
   color: white;
+  white-space: pre;
 }
 
 /* === Environnement :dictionary === */

@@ -73,8 +73,6 @@ defmodule Pharkdown.Engine do
     code = compile(phad_path, Path.basename(html_path))
     # Pour le moment, faire comme si le fichier se trouvait à la racine, puisque 
     # cette fonction est appelée pour construire le manuel en HTML
-    css_link = ~s(<link rel="stylesheet" type="text/css" href="priv/static/css/themes/pharkdown.css">\n)
-    options = [ {:css, css_link } | options]
     code = options[:full_html] && full_html(code, options) || code
     File.write!(html_path, code)
   end
