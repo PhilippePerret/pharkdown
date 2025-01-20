@@ -22,6 +22,10 @@ defmodule ParFichiersTests do
   #   test_file("textes/accueil.phad")
   # end
 
+  # test "Test" do
+  #   test_file("textes/bug-20250120-6:04.phad")
+  # end
+
   defp test_file(relpath) do
     full_path = Path.expand(Path.join(["test","fixtures", relpath]))
     File.exists?(full_path) || raise "Le fichier #{inspect full_path} est introuvable."
@@ -30,3 +34,7 @@ defmodule ParFichiersTests do
     IO.puts resultat
   end
 end
+
+# defmodule Pharkdown.Helpers do
+#   def path(chemin), do: "<code>#{chemin}</code>" 
+# end 

@@ -1,0 +1,22 @@
+Dans cette application, je vais donc aller jusqu’à la création d’une extension (ou package, ou dépendance, c’est selon) pour traiter les fichiers markdown, quelque chose de plus étendu que le package [phoenix-markdown][3] qui va me servir néanmoins d’exemple.
+
+### Par extension de fichier
+
+Je veux que ce soit, comme phoenix-markdown, un *moteur de rendu*, c’est-à-dire qu’il suffise d’utiliser une certaine extension de fichier pour que le fichier soit traité avec ce moteur de rendu. En l’occurrence, il s’agira de l’extension path(.mmd).
+
+> Est-ce que ça ne fait pas confusion avec « multi-markdown » ?… Est-ce qu’il ne vaudrait pas mieux path(.ppmd) même si c’est un peu long ?
+
+J’ai remarqué comment le définir très simplement dans path(config/config.ex) :
+
+~~~elixir
+config :mon_app, :template_engines, mmd: MonMoteur.Engine
+~~~
+
+### Dépendances
+
+Comme je vais partir de phoenix-markdown, j’ajoute cette dépendance ainsi que *:earmak* (utile aussi, mais je ne sais pas encore pourquoi) à path(mix.ex) :
+
+~~~elixir
+{:phoenix_markdown, "~> 1.0"},
+{:earmark, "~> 1.4"},
+~~~

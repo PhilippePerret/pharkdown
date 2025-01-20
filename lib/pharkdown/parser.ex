@@ -168,7 +168,7 @@ defmodule Pharkdown.Parser do
   # 3) une fois que tout le texte a été analysé, on le parse séquentiellement
   #    pour obtenir une liste de tokens dans l'ordre
   #
-  @regex_blockcode ~r/(~~~|```)([a-z]+\n)?(.+)\n\1/ms
+  @regex_blockcode ~r/^(~~~|```)([^\n]*)\n(.+)\n\1/Ums
   @regex_known_environments ~r/^\~(#{Enum.join(@known_environments, "|")})\n(.+)\n\1\~$/ms
 
   def tokenize(string, options \\ []) do

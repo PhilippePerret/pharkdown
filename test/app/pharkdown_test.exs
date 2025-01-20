@@ -152,6 +152,60 @@ defmodule PharkdownTest do
 
   end #/describe fonctions personnalisées
 
+
+  test "Deux blocs de code qui s'enchainent" do
+    code = """
+    ~~~
+    Un premier code
+    ~~~
+
+    Un paragraphe.
+
+    ~~~
+    Un autre code
+    ~~~
+    """
+    actual = Engine.compile_string(code)
+    expect = """
+    <pre><code lang="">
+    Un premier code
+    </code></pre>
+    <div class="p">Un paragraphe.</div>
+    <pre><code lang="">
+    Un autre code
+    </code></pre>
+    """ |> String.trim()
+
+    assert actual == expect
+  end
+
+  test "Deux blocs de code qui s'enchainent, avec des langues" do
+    code = """
+    ~~~elixir
+    Un premier code
+    ~~~
+
+    Un paragraphe.
+
+    ~~~html
+    Un autre code
+    ~~~
+    """
+    actual = Engine.compile_string(code)
+    expect = """
+    <pre><code lang="elixir">
+    Un premier code
+    </code></pre>
+    <div class="p">Un paragraphe.</div>
+    <pre><code lang="html">
+    Un autre code
+    </code></pre>
+    """ |> String.trim()
+
+    assert actual == expect
+  end
+
+
 end
 
 # --- Pour tester les fonctions personnalisées ---
