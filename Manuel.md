@@ -359,5 +359,7 @@ dit(Sais-tu jouer à, [1\, 2\, 3], soleil)
 Ci-dessus, la fonction `dit` recevra : 
 
 ~~~
-dit("Sais-tu jouer à", [1, 2, 3], "soleil")
+dit("Sais-tu jouer à", ["1, 2, 3"], "soleil")
 ~~~
+
+> Noter les guillemets autour de "1, 2, 3" car malheureusement, les virgules échappées dans la liste pour tenter de la conserver ne permet pas de transformer en liste ensuite.
