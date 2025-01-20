@@ -150,6 +150,19 @@ defmodule PharkdownTest do
     #   assert actual == expect
     # end
 
+    test "on peut utiliser les fonctions générales communes" do
+      code = "red(Ce texte doit être en rouge)"
+      actual = Engine.compile_string(code)
+      expect = ~s(<div class="p"><span style="color:red;">Ce texte doit être en rouge</span></div>)
+      assert actual == expect
+
+      code = "color(Ce texte doit être dans ma couleur, 55F25E)"
+      actual = Engine.compile_string(code)
+      expect = ~s(<div class="p"><span style="color:#55F25E;">Ce texte doit être dans ma couleur</span></div>)
+      assert actual == expect
+
+    end
+
   end #/describe fonctions personnalisées
 
 

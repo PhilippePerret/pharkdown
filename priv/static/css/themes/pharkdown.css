@@ -2,6 +2,10 @@ body {
   font-size: 16pt;
 }
 
+/* -- Spéciales Pharkdown */
+
+nowrap {white-space:nowrap;}
+
 /* --- TITRES --- */
 
 h1, h2, h3, h4, h5 {

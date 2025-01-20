@@ -363,10 +363,38 @@ defmodule Pharkdown.Formatter do
   defp formate_dict_element(:term, content), do: "<dt>#{content}</dt>"
   defp formate_dict_element(:definition, content), do: "<dd>#{content}</dd>"
 
-  # Traitement des guillemets droits
-  @regex_guillemets ~r/"(.+)"/U   ; @rempl_guillemets "« \\1 »"
+  @doc """
+  ## Traitement des guillemets droits
+
+  ## Examples
+
+    iex> Formatter.formate_smart_guillemets(~s("bonjour"), [])
+    "« bonjour »"
+
+    iex> Formatter.formate_smart_guillemets(~s("bonjour" et "re-bonjour"), [])
+    "« bonjour » et « re-bonjour »"
+
+    - On ne touche à rien si :smarties est à false
+    iex> Formatter.formate_smart_guillemets(~s("bonjour" et "re-bonjour"), [smarties: false])
+    ~s("bonjour" et "re-bonjour")
+
+    - On ne touche pas aux guillemets sans au moins un 'blanc' autour
+    iex> Formatter.formate_smart_guillemets(~s(<span class="height:12px;">solide</span>), [])
+    ~s(<span class="height:12px;">solide</span>)
+
+    - Avec des guillemets à transformer et d'autres non
+    iex> Formatter.formate_smart_guillemets(~s("bonjour" et >style="height:12x;">), [])
+    ~s(« bonjour » et >style="height:12x;">)
+
+    - Sauf si l'on n'a rien à corriger
+    iex> Formatter.formate_smart_guillemets(~s("bonjour" et >style="height:12x;">), [smarties: false])
+    ~s("bonjour" et >style="height:12x;">)
+
+  """
+  @regex_guillemets ~r/(?:(^| | )")(.+)(?:"( | |$))/U ; @rempl_guillemets "\\1« \\2 »\\3"
+  # Avant (mais trop imprécis) @regex_guillemets ~r/"(.+)"/U   ; 
   @regex_apostrophes ~r/'/U       ; @rempl_apostrophes "’"
-  defp formate_smart_guillemets(string, options) do
+  def formate_smart_guillemets(string, options) do
     if options[:smarties] == false do
       string
     else
@@ -762,7 +790,15 @@ defmodule Pharkdown.Formatter do
           fun_params =~ ~r/^\[(.+)\]$/ -> [StringTo.list(fun_params)]
           true -> StringTo.list(fun_params)
           end
-        rempl = apply(Pharkdown.Helpers, String.to_atom(fun_name), fun_params)
+        fun_name = String.to_atom(fun_name)
+        module = 
+          if function_exported?(Pharkdown.Helpers, fun_name, Enum.count(fun_params)) do
+            Pharkdown.Helpers
+          else
+            Pharkdown.PharkdownHelpers
+          end
+
+        rempl = apply(module, fun_name, fun_params)
         String.replace(string, tout, rempl, [global: false])
       end)
     else
