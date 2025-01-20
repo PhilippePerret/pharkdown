@@ -169,8 +169,6 @@ defmodule Pharkdown.Parser do
   #    pour obtenir une liste de tokens dans l'ordre
   #
   @regex_blockcode ~r/^(~~~|```)([^\n]*)\n(.+)\n\1/Ums
-  @regex_known_environments ~r/^\~(#{Enum.join(@known_environments, "|")})\n(.+)\n\1\~$/ms
-
   def tokenize(string, options \\ []) do
     collector = %{texte: string, tokens: [], options: options}
     # IO.inspect(string, label: "\nSTRING AU DÉPART")
@@ -532,6 +530,7 @@ defmodule Pharkdown.Parser do
     ]
 
   """
+  @regex_known_environments ~r/^\~(#{Enum.join(@known_environments, "|")})\n(.+)\n\1\~$/Ums
   def scan_for_known_environments(collector, options) do
     Regex.scan(@regex_known_environments, collector.texte)
     # |> IO.inspect(label: "\nAprès SCAN des ENVIRONNEMENTS connus")

@@ -241,10 +241,10 @@ etc.
 Permet d'avoir des textes qui se présentent de cette manière, avec un terme et une définition.
 
 ~dico
-:Terme
+: Terme
 Définition
 Autre paragraphe définition
-:Autre terme
+: Autre terme
 .exergue: Définition dans le style exergue.
 dico~
 
@@ -324,11 +324,6 @@ Ces fonctions doivent toutes être définies dans un module `Pharkdown.Helpers` 
 
 ~~~elixir
 defmodule Pharkdown.Helpers do
-
-  def mafonction(arg1, arg2… argN) do
-    ... traitement ...
-    "sortie de la fonction" # à inscrire dans le document
-  end
 
   def autre_fonction() do
     ...

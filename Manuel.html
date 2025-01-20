@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page sans titre</title>
+  <link rel="stylesheet" type="text/css" href="priv/static/css/themes/pharkdown.css">
+
+  <style type="text/css">
+  body {
+    margin: 1em 2em;
+    width: 920px;
+    padding: 0;
+  }
+  </style>
+</head>
+<body>
+  <h1>Pharkdown</h1>
+<h2>Présentation</h2>
+<div class="p"><strong>Pharkdown</strong> est un <em>engin de rendu</em> pour <a href="https://elixir-lang.org/docs.html" target="_blank">Phoenix/Elixir</a> qui permet de travailler ses vues à partir d’un formatage simple, à l’image de <a href="https://fr.wikipedia.org/wiki/Markdown" target="_blank">markdown</a> mais offrant beaucoup plus de possibilités. On peut notamment créer des <em>environnements</em> personnalisés pour traiter un bloc de texte d’une manière personnalisées.</div>
+<div class="p">En plus de ça, <em>pharkdown</em> opère tout un tas de transformation qui permettent de simplifier la vie et d’assurer un rendu parfait (notamment en gérant, de façon unique, les espaces insécables qui ne sont jamais parfaitement rendu).</div>
+<h3>Compile time et Runtime</h3>
+<div class="p">Une autre grande différence, dans l’utilisation avec Phoenix, est que <em>Pharkdown</em> fonctionne en deux temps. Il peut fonctionner en direct (avec la méthode <code>render/3</code> de Phoenix) et il peut fonctionner en préparant à la compilation un document <code>.html.heex</code> qui sera ensuite utiliser avec <code>render/3</code>. Le second fonctionnement est le fonctionnement "normal".</div>
+<div class="p">Pour ce faire, il suffit d’ajouter <code>use Pharkdown</code> au contrôleur qui doit utiliser cette possibilité.</div>
+<h2>Utilisation</h2>
+<h3>Code EEx et composants HEX</h3>
+<div class="p">On peut, dans une page Pharkdown, utiliser les composants HEX (définis par <code><.composant /></code>) ainsi que les codes <code><%= operation %></code>, qui ne seront qu’évalués au moment du chargement de la page (<code>render/3</code>).</div>
+<div class="p">Noter que les textes ou autres produits par les code EEx ne passent pas par les formateurs <em>Pharkdown</em> à part s’ils sont appelés explicitement. On peut faire par <nowrap>exemple&nbsp;:</nowrap> </div>
+<pre><code lang="">
+defmodule MonAppWeb.PageController do
+use MonAppWeb, :controller
+
+alias Transformer, as: T
+
+def home(conn, params) do
+render(conn, :home, %{
+message: "Mon &lt;message> !" |> T.h()  # => "Mon &lt;message>&amp;nbsp;!
+})
+end
+end
+</code></pre>
+<div class="p">Noter, ci-dessus, que c’est idiot de faire ça puisque les textes donnés sont interprétés pour du HTML donc il y a double interprétation ici, ce qui produit le <code>&amp;nbsp;</code> (la méthode <code>T.h/1</code> produit <code>&nbsp;</code> à la place de l’insécable et Phoenix remplace sont <code>&</code> par un <code>&amp;</code>.</div>
+<div class="p">Mais cela serait tout à fait justifié en <nowrap>utilisant&nbsp;:</nowrap> </div>
+<pre><code lang="">
+C'est &lt;%= raw @message %>
+</code></pre>
+<div class="p">… qui permet de traiter du code HTML tel quel.</div>
+<div class="p">> <nowrap>Rappel&nbsp;:</nowrap> Si des codes doivent être évalués (définitivement) à la compilation du fichier (transformation <code>.phad -> .html.heex</code>) il faut utiliser les <a href="#fonctions-transformation">fonctions de transformation</a>.</div>
+<h3>Transformations automatiques</h3>
+<h4>Espaces insécables</h4>
+<div class="p">Malgré tous les efforts des navigateurs, ils ne parviennent pas à traiter correctement les insécables et on se retrouve souvent avec des <nowrap>«&nbsp;:&nbsp;»</nowrap> ou autres <nowrap>«&nbsp;!&nbsp;»</nowrap> tout seuls à la ligne. Il n’en va pas de même avec <em>Pharkdown</em> qui les gèrent parfaitement.</div>
+<h3>Marquages spéciaux</h3>
+<h4>Exposant avec `^`</h4>
+<div class="p">Pour placer les 2<sup>e</sup> ou 1<sup>er</sup>, ou les notes<sup>12</sup>, on utilise le circonflexe avant l’élément à mettre en exposant. Par <nowrap>exemple&nbsp;:</nowrap></div>
+<pre><code lang="">
+Le 1^er et la 2^e comme la 1^re et le 2^e.
+</code></pre>
+<div class="p">Pharkdown procède ici à des corrections automatiques (sauf si les <a href="#options">options</a> sont réglées à <code>correct: false</code>) dont la liste est la <nowrap>suivante&nbsp;:</nowrap></div>
+<pre><code lang="">
+2^ème => "ème" fautif remplacé par "e"
+1^ere => "ere" fautif remplacé par "re"
+e après X, V, I ou un nombre comme dans XIXe ou 54e => e en exposant
+</code></pre>
+<div class="p">Pour que ces corrections ne s’effectuent pas, mettre les <a href="#options">options</a> à <code>correct: false</code>. Seul le circonflexe sera traité en tant que marque d’exposant. Le texte <code>1^ère</code> fautif restera <code>1<sup>ère</sup></code> (par exemple dans un cours d’orthographe).</div>
+<h3>Liens `[...](...)`</h3>
+<div class="p">Comme avec markdown, on peut utiliser le formatage <code>[titre](href)</code> pour créer des liens. </div>
+<div class="p">Mais on peut aller plus loin en utilisant le concept de <em>routes vérifiées</em> de Phoenix. il suffit pour ça de mettre le chemin relatif entre <nowrap>crochets&nbsp;:</nowrap></div>
+<pre><code lang="">
+[titre du lien]({vers/route/verifiee})
+</code></pre>
+<div class="p">Ce marquage sera transformé <nowrap>en&nbsp;:</nowrap></div>
+<pre><code lang="html">
+&lt;a href={~p"/vers/route/verfiee"}>
+</code></pre>
+<ul><li>Noter que le "/" manquant au début a été ajouté automatiquement.</li><li>Noter qu'il ne faut surtout pas de guillemets dans les parenthèses, même après le `~p` s'il est utilisé : `[lien]({~p/path/to/verified})`</li></ul>
+<div class="p">Mais on peut aller encore plus loin en ajoutant après <code>href</code> des valeurs d’attributs à ajouter à la balise <code><a></code>. Tous les attributs doivent être séparés par des virgules (virgule-espace) et chaque élément doit être une paire <code>attribut=value</code> qui sera transformée en <code>attribut="value"</code> (ne pas mettre de guillemets, donc).</div>
+<pre><code lang="">
+[titre](path/to/ca) # => "&lt;a href="path/to/ca">titre&lt;/a>"
+
+[titre](path/to | class=css1 css2, style=margin-top:12rem;)
+=> "&lt;a href="path/to" class="css1 css2" style="margin-top:12rem;">titre&lt;/a>
+</code></pre>
+<h4>Guillemets droits</h4>
+<div class="p">Les guillemets droits (") sont automatiquement remplacés par des chevrons et les apostrophes droits par des apostrophes courbes, sauf si l’option <code>[smarties: false]</code> est utilisées.</div>
+<div class="p">Noter que cela n’affecte en rien les codes mais seulement les textes (sauf dans les codes, où il faut penser à les utiliser directement).</div>
+<div class="p">Si l’on veut forcer l’utilisation ponctuelle de guillemets droits, on peut forcer la marque avec <code>"</code>.</div>
+<h4>Retours à la ligne</h4>
+<div class="p">On peut forcer un simple retour à la ligne (<code><br /></code> en HTML) en utilisant <code><br /></code>. Par <nowrap>exemple&nbsp;:</nowrap></div>
+<pre><code lang="">
+Le texte avec un<br />Retour à la ligne
+</code></pre>
+<div class="p"><nowrap>Note&nbsp;:</nowrap> les espaces autour du <code><br /></code> seront toujours supprimées.</div>
+<h3>Sauts de ligne</h3>
+<div class="p">Contrairement à Markdown <nowrap>—&nbsp;et</nowrap> c’est une des grandes <nowrap>différences&nbsp;—</nowrap>, on ne sépare pas les paragraphes par des doubles-retours chariot. Ainsi, le <nowrap>texte&nbsp;:</nowrap></div>
+<pre><code lang="">
+Mon paragraphe
+Mon deuxième paragraphe
+</code></pre>
+<div class="p">… sera interprété comme deux paragraphes distincts.</div>
+<div class="p">Quand on doit vraiment forcément un retour à la ligne, on ajoute un <code><br /></code> comme on l’a vu précédemment.</div>
+<h3>Lignes de séparation</h3>
+<div class="p">Comme en <em>Markdown</em>, on peut écrire les lignes en <em>Pharkdown</em> à l’aide de <code>---</code> (ou <code>***</code> ici) quand ce signe se trouve seul sur une ligne.</div>
+<div class="p">Mais avec <em>Pharkdown</em>, on peut styliser cette <nowrap>ligne&nbsp;:</nowrap></div>
+<ul><li>Avec du style brut. Par exemple `---height:10px---` produira la ligne `<hr style="height:10px"/>`.</li><li>Avec du style par Map (ou Json). Par exemple `***%{height: "12px", size: "50%"}***` produira la ligne `<hr style="height:12px;size:50%;"/>`.</li><li>Par classes CSS. Par exemple `---.css1.css2---` produira la ligne `<hr class="css1 css2"\>`.</li></ul>
+<h2>Stylisation</h2>
+<div class="p">Une des grandes forces de Pharkdown par rapport à Markdown est de pouvoir styliser les paragraphes de façon simple, avec des classes CSS propres, et de pouvoir définir des identifiants afin d’y faire référence en CSS.</div>
+<div class="p">Ces classes et ces identifiants sont simplement définies en début de paragraphe, par un texte qui ne doit contenir que des lettres, des points, des tirets et des nombres. Il </div>
+<pre><code lang="">
+#monPar.css1.css2.en_core: Le paragraphe sera dans le style (class) css1, css2 et encore et aura pour identifiant '#monPar`.
+</code></pre>
+<div class="p">Le code ci-dessus <nowrap>produira&nbsp;:</nowrap> </div>
+<pre><code lang="">
+&lt;p id="monPar" class="css1 css2 en_core">Le paragraphe sera dans le style (class) css1, css2 et encore et aura pour identifiant '#monPar`.&lt;/p>
+</code></pre>
+<div class="p">On peut même stipuler explicitement la balise à utiliser en la mettant en tout premier, sans <nowrap>point&nbsp;:</nowrap></div>
+<pre><code lang="">
+p#monDiv: C'est un "vrai" paragraphe, pas un div.
+</code></pre>
+<div class="p">… <nowrap>produira&nbsp;:</nowrap></div>
+<pre><code lang="">
+&lt;p id="p monDiv">C'est un div et pas un paragraphe.&lt;/p>
+</code></pre>
+<div class="p">Il est impératif de mettre toujours dans l’ordre <code>tag-identifiant-classes css</code>.</div>
+<h2>Les environnements</h2>
+<div class="p">Il existe des <em>environnements</em> par défaut qui permettent de mettre en forme des blocs de texte d’une certaine manière. C’est le cas par exemple pour du code ou un aspect document pour du texte.</div>
+<div class="p">Un environnement se trouve entre les <nowrap>marques&nbsp;:</nowrap></div>
+<pre><code lang="">
+~environnement
+...
+environnement~
+</code></pre>
+<div class="p">Ces environnements <nowrap>sont&nbsp;:</nowrap></div>
+<pre><code lang="">
+document (ou 'doc')
+dictionary (ou 'dict' ou 'dico' ou 'dictionnaire')
+</code></pre>
+<div class="p">> Voir le détail plus bas.</div>
+<div class="p">À l’avenir, l’utilisateur pourra définir le traitement de ses propres environnements.</div>
+<h3>Listes</h3>
+<div class="p">Comme en markdonw, on indique les liste à l’aide de <code>*</code> ou de <code>-</code> suivis d’une espace. Les degrés différents s’indiquent en multipliant ces marques.</div>
+<pre><code lang="">
+* Item 1
+** Item 1.1
+** Item 1.2
+* Item 2
+</code></pre>
+<div class="p">On peut ajouter tout environnement à l’intérieur d’une liste, sans <nowrap>l’amorce&nbsp;:</nowrap></div>
+<pre><code lang="">
+* Item 1
+** Item 1.1
+doc/
+Mon document qui sera placé dans l'item
+de numéro 1.1 c'est-à-dire au second
+niveau de plan.
+/doc
+** Item 1.2
+* Item 2
+</code></pre>
+<div class="p">Les listes numérotées s’indique avec un premier élément <code>1-</code> suivi d’une espace.</div>
+<pre><code lang="">
+1- Item de liste numérotée
+- Son item 2
+etc.
+</code></pre>
+<div class="p">On peut partir d’un autre chiffre sans <nowrap>problème&nbsp;:</nowrap></div>
+<pre><code lang="">
+233- Item d'une longue liste
+- son deuxième item
+etc.
+</code></pre>
+<h3>Dictionnaire (liste de définitions)</h3>
+<div class="p">Permet d’avoir des textes qui se présentent de cette manière, avec un terme et une définition.</div>
+<dl><dt>Terme</dt><dd>Définition</dd><dd>Autre paragraphe définition</dd><dt>Autre terme</dt><dd>.exergue: Définition dans le style exergue.</dd></dl>
+<div class="p">… en les définissant <nowrap>ainsi&nbsp;:</nowrap></div>
+<pre><code lang="">
+TOKEN25NEKOT
+</code></pre>
+<h4>Classes CSS dans les thèmes</h4>
+<div class="p"><code>dl</code> (liste de dictionnaire), <code>dt</code> (terme), <code>dd</code> (définition).</div>
+<h3>Environnement document</h3>
+<pre><code lang="">
+TOKEN26NEKOT
+</code></pre>
+<div class="p">{TODO: Décrire ce que cet environnement a de spécial…}</div>
+<div class="p"><a name="options"></a></div>
+<h3>Options</h3>
+<div class="p">Pour définir les options, ajouter au fichier <code>config/config.ex</code> la ligne <nowrap>suivante&nbsp;:</nowrap></div>
+<pre><code lang="elixir">
+config :pharkdown, :options, [
+... liste des options ...
+]
+</code></pre>
+<div class="p">Les options sont les <nowrap>suivantes&nbsp;:</nowrap></div>
+<pre><code lang="">
+smarties      Si true (default), corrige les guillemets, les appos-
+trophes.
+correct       Si true (default), corrige certaines fautes comme les
+mauvais exposants, les insécables oubliés, etc.
+debug         Si true, affiche des messages de déboguage (faux par
+défaut)
+</code></pre>
+<div class="p"><a name="fonctions-transformation"></a></div>
+<h2>Fonctions de transformation</h2>
+<div class="p">Une des fonctionnalités puissante de <em>Pharkdown</em> est de pouvoir utiliser des fonctions elixir pour insérer du code. Ces fonctions permettent donc de produire du code à la compilation du fichier <code>.phad</code>, au moment de sa transformation vers un fichier <code>.html.heex</code>.</div>
+<div class="p">Il existe trois types de <nowrap>fonction&nbsp;:</nowrap></div>
+<ul><li>Le type "général", qui sont des [fonctions pré-définies](#predefined-functions) par Pharkdown.</li><li>Le type "personnalisé", sont sont les [fonctions personnalisées](#custom-functions) qui sont évaluées en début de traitement et permettent donc d'insérer du code `.phad` qui sera traité comme tout contenu du fichier.</li><li>Le type "post" qui sera évalué à la toute fin de la transformation et ne sera donc pas traité comme le reste du contenu. On identifie ces fonctions (le moins courantes, dans une utilisation "normale") à l'aide du préfixe `post/`. Par exemple `post/ma_fonction_apres()`.</li></ul>
+<div class="p"><a name="predefined-functions"></a></div>
+<h3>Fonctions pré-définies</h3>
+<div class="p">Je dois faire la liste des fonctions.</div>
+<div class="p"><a name="custom-functions"></a></div>
+<h3>Fonctions personnalisées</h3>
+<div class="p">Ces fonctions doivent toutes être définies dans un module <code>Pharkdown.Helpers</code> accessible (donc placé quelque part dans le dossier <code>lib</code> de l’application). On la définit comme une fonction normale qui a accès à tous les éléments de l’application.</div>
+<pre><code lang="elixir">
+defmodule Pharkdown.Helpers do
+
+def mafonction(arg1, arg2… argN) do
+... traitement ...
+"sortie de la fonction" # à inscrire dans le document
+end
+
+def autre_fonction() do
+...
+end
+
+def une_fonction_post(arg1… argN) do
+...
+end
+end
+</code></pre>
+<div class="p">Le <strong>nom d’une fonction</strong> est impérativement construit avec des minuscules et des traits plats, rien d’autre.</div>
+<div class="p">Les arguments sont évalués à l’aide de l’extension <code>StringTo</code> (<code>StringTo.list</code>) et peuvent donc ne pas comporter de guillemets. Par <nowrap>exemple&nbsp;:</nowrap></div>
+<pre><code lang="">
+dit([bonjour, tout, le, monde])
+</code></pre>
+<div class="p">… sera interprété <nowrap>comme&nbsp;:</nowrap> </div>
+<pre><code lang="elixir">
+dit(["bonjour", "tout", "le", "monde"])
+</code></pre>
+<div class="p"><nowrap>Attention&nbsp;:</nowrap> si les arguments contiennent des virgules qu’il faut garder, il faut les <nowrap>échapper&nbsp;:</nowrap></div>
+<pre><code lang="">
+dit(Bonjour\, ça va ?)
+</code></pre>
+<div class="p">Dans le cas contraire, <em>pharkdown</em> pensera qu’il s’agit de deux paramètres, <nowrap>«&nbsp;Bonjour&nbsp;»</nowrap> et "ça <nowrap>va&nbsp;?</nowrap>".</div>
+<div class="p">C’est important pour des listes dans une suite de <nowrap>paramètres&nbsp;:</nowrap></div>
+<pre><code lang="">
+dit(Sais-tu jouer à, [1\, 2\, 3], soleil)
+</code></pre>
+<div class="p">Ci-dessus, la fonction <code>dit</code> <nowrap>recevra&nbsp;:</nowrap> </div>
+<pre><code lang="">
+dit("Sais-tu jouer à", ["1, 2, 3"], "soleil")
+</code></pre>
+<div class="p">> Noter les guillemets autour de <nowrap>«&nbsp;1,</nowrap> 2, <nowrap>3&nbsp;»</nowrap> car malheureusement, les virgules échappées dans la liste pour tenter de la conserver ne permet pas de transformer en liste ensuite.</div>
+</body>
+</html>

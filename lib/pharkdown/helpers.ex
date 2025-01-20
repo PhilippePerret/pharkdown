@@ -7,7 +7,7 @@ defmodule Pharkdown.PharkdownHelpers do
   Pharkdown.Helpers
   """
 
-  def red(string, options \\ []) do
+  def red(string, _options \\ []) do
     ~s(<span style="color:red;">#{string}</span>)
   end
 
@@ -23,8 +23,15 @@ defmodule Pharkdown.PharkdownHelpers do
     ~s(<span style="color:#0FFFF0;">en jaune ?</span>)
 
   """
-  def color(string, color, options \\ []) do
+  def color(string, color, _options \\ []) do
     color = String.starts_with?(color, "#") && color || "##{color}"
     ~s(<span style="color:#{color};">#{string}</span>)
+  end
+
+
+
+
+  def __liste_fonctions() do
+    "Je dois faire la liste des fonctions."
   end
 end

@@ -219,6 +219,50 @@ defmodule PharkdownTest do
   end
 
 
+  test "Une fonction dans un bloc de code ne doit pas être appelée" do
+    code = """
+    ~~~elixir
+    rien(["bonjour", "tout", "le", "monde"])
+    ~~~
+    """
+    actual = Engine.compile_string(code)
+    expect = """
+    <pre><code lang="elixir">
+    rien(["bonjour", "tout", "le", "monde"])
+    </code></pre>
+    """ |> String.trim()
+    assert actual == expect
+  end
+
+  test "Une fonction dans DEUX blocs de code ne doit pas être appelée" do
+    code = """
+    Paragraphe 1.
+    ~~~elixir
+    rien(["bonjour", "tout", "le", "monde"])
+    ~~~
+    Paragraphe 2.
+    ~~~html
+    autre_rien(["bonjour", "tout", "le", "monde"])
+    ~~~
+    Paragraphe 3.
+    """
+    actual = Engine.compile_string(code)
+    expect = """
+    <div class="p">Paragraphe 1.</div>
+    <pre><code lang="elixir">
+    rien(["bonjour", "tout", "le", "monde"])
+    </code></pre>
+    <div class="p">Paragraphe 2.</div>
+    <pre><code lang="html">
+    autre_rien(["bonjour", "tout", "le", "monde"])
+    </code></pre>
+    <div class="p">Paragraphe 3.</div>
+    """ |> String.trim()
+    assert actual == expect
+  end
+
+
+
 end
 
 # --- Pour tester les fonctions personnalisées ---

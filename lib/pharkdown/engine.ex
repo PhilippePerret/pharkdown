@@ -59,12 +59,58 @@ defmodule Pharkdown.Engine do
     end
     contenu
   end
-
   defp titre_exerg(str), do: IO.ANSI.green() <> "\n#{str}\n" <> IO.ANSI.reset()
 
+
   # Crée le fichier +html_path+ à partir du fichier +phad_path+
-  def compile_file(phad_path, html_path) do
+  def compile_file(phad_path, html_path \\ nil) do
+    html_path = ensure_html_path_from(phad_path, html_path)
     File.write!(html_path, compile(phad_path, Path.basename(html_path)))
+  end
+  
+  def compile_file(phad_path, html_path, options) do
+    html_path = ensure_html_path_from(phad_path, html_path)
+    code = compile(phad_path, Path.basename(html_path))
+    # Pour le moment, faire comme si le fichier se trouvait à la racine, puisque 
+    # cette fonction est appelée pour construire le manuel en HTML
+    css_link = ~s(<link rel="stylesheet" type="text/css" href="priv/static/css/themes/pharkdown.css">\n)
+    options = [ {:css, css_link } | options]
+    code = options[:full_html] && full_html(code, options) || code
+    File.write!(html_path, code)
+  end
+
+  defp full_html(html_code, options \\ []) do
+    """
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>#{options[:title] || "Page sans titre"}</title>
+      #{options[:css]}
+      <style type="text/css">
+      body {
+        margin: 1em 2em;
+        width: 920px;
+        padding: 0;
+      }
+      </style>
+    </head>
+    <body>
+      #{html_code}
+    </body>
+    </html>
+    """
+  end
+
+  defp ensure_html_path_from(phad_path, html_path) do
+    if is_nil(html_path) do
+      folder = Path.dirname(phad_path)
+      affixe = Path.basename(phad_path, Path.extname(phad_path))
+      Path.join([folder, "#{affixe}.html"])
+    else
+      html_path
+    end
   end
 
   def compile_options(nil, options) do
