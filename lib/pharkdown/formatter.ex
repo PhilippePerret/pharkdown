@@ -622,44 +622,8 @@ defmodule Pharkdown.Formatter do
     ~s(<div class="p"><a href={~p"/explorer/tasker"}>mon lien</a></div>)
 
   """
-  @regex_links ~r/\[(?<title>.+)\]\((?<href>.+)(?:\|(?<params>.+))?\)/U
-  @regex_verified_route ~r/^\{(.+)\}$/
   def formate_href_links(string, _options) do
-    # IO.puts "-> formate_href_links (avec :"
-    # IO.inspect(string)
-    Regex.replace(@regex_links, string, fn _, title, href, params ->
-      attributes =
-        if params == "" do
-          ""
-        else
-          params
-          |> String.split(",") 
-          |> Enum.map(fn i -> String.trim(i) end)
-          |> Enum.map(fn i -> String.split(i, "=") end)
-          |> Enum.map(fn [attr, val] -> "#{attr}=\"#{val}\"" end)
-          |> (fn liste -> " " <> Enum.join(liste, " ") end).()
-        end
-      target = String.starts_with?(href, "http") && " target=\"_blank\"" || ""
-
-      # Transformation de href en fonction de son type, qui peut être
-      # normal ou avec route vérifiée
-      href = String.trim(href)
-      href =
-        case Regex.match?(@regex_verified_route, href) do
-        false -> ~s("#{href}")
-        true ->
-          route = Regex.scan(@regex_verified_route, href) |> Enum.at(0) |> Enum.at(1)
-          "{" <> (case String.starts_with?(route, "~p") do
-          true  -> 
-            String.replace(route, ~r/^~p(.+)$/, ~s(~p"\\1"))
-          false -> 
-            route = String.starts_with?(route, "/") && route || "/#{route}"
-            ~s(~p"#{route}")
-          end) <> "}"
-        end
-    
-      "<a href=#{href}#{attributes}#{target}>#{title}</a>"
-    end)
+    Pharkdown.Link.treate_links_in(string)
   end
 
   @regex_exposants ~r/\^(.+)\b/Uu
