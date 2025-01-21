@@ -66,6 +66,16 @@ defmodule Pharkdown.Formatter do
   Fonction principale qui reçoit le découpage en tokens de la fonction
   Pharkdown.Parser.parse et le met en forme.
   """
+
+  # Fonction principale appelé par l'engin, juste après le parsing.
+  # Elle remplace la méthode suivante, qui recevait avant la liste
+  # des tokens. Maintenant, on peut ajouter au cours du parsing des
+  # informations à collector.options (par exemple les url des liens
+  # par référence — [titre][xxx])
+  def formate(collector, options) when is_map(collector) do
+    formate(collector.tokens, collector.options)
+  end
+
   def formate(liste, options) when is_list(liste) do
     liste
     # |> IO.inspect(label: "\nLISTE")
@@ -607,6 +617,9 @@ defmodule Pharkdown.Formatter do
 
     iex> Pharkdown.Formatter.formate("[lien]({~p/route/verified})", [])
     ~s(<a href={~p"/route/verified"}>lien</a>)
+
+    iex> Engine.compile_string("[mon titre][12]\\n[12]: mon/lien\\n")
+    ~s(<div class="p"><a href="mon/lien">mon titre</a></div>)
 
   """
   def __pour_le_doctest_de_la_fonction_href_links, do: nil

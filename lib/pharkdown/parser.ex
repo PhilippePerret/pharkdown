@@ -54,12 +54,12 @@ defmodule Pharkdown.Parser do
 
   ## Examples
 
-    iex> Pharkdown.Parser.tokenize("Une simple phrase")
+    iex> Pharkdown.Parser.tokenize("Une simple phrase").tokens
     [{:paragraph, [content: "Une simple phrase"]}]
 
     --- Environnements ---
 
-    iex> Pharkdown.Parser.tokenize("~document\\nPremière ligne\\nDeuxième ligne\\ndocument~\\nAutre paragraphe")
+    iex> Pharkdown.Parser.tokenize("~document\\nPremière ligne\\nDeuxième ligne\\ndocument~\\nAutre paragraphe").tokens
     [
       {:environment, [
           type: :document, 
@@ -74,7 +74,7 @@ defmodule Pharkdown.Parser do
 
     - Liste -
 
-    iex> Pharkdown.Parser.tokenize("* Premier item\\n* Deuxième item\\n* Troisième item")
+    iex> Pharkdown.Parser.tokenize("* Premier item\\n* Deuxième item\\n* Troisième item").tokens
     [
       {
         :list, 
@@ -89,7 +89,7 @@ defmodule Pharkdown.Parser do
       }
     ]
 
-    iex> Pharkdown.Parser.tokenize("5- Premier\\n- Deuxième\\n-- Troisième")
+    iex> Pharkdown.Parser.tokenize("5- Premier\\n- Deuxième\\n-- Troisième").tokens
     [
       {
         :list, 
@@ -109,7 +109,7 @@ defmodule Pharkdown.Parser do
 
     # --- Mélange ---
 
-    iex> Pharkdown.Parser.tokenize("Tout premier paragraphe\\n# Titre \\n* item 1\\n* item 2\\n\\n## Autre titre\\nParagraphe")
+    iex> Pharkdown.Parser.tokenize("Tout premier paragraphe\\n# Titre \\n* item 1\\n* item 2\\n\\n## Autre titre\\nParagraphe").tokens
     [
       {:paragraph, [content: "Tout premier paragraphe"]},
       {:title, [content: "Titre", level: 1]},
@@ -128,7 +128,7 @@ defmodule Pharkdown.Parser do
 
     - Ordre différent -
 
-    iex> Pharkdown.Parser.tokenize("~document\\nLa ligne\\ndocument~\\n## Le sous-titre")
+    iex> Pharkdown.Parser.tokenize("~document\\nLa ligne\\ndocument~\\n## Le sous-titre").tokens
     [
       {:environment, [type: :document, content: [
         [type: :paragraph, content: "La ligne"]
@@ -174,6 +174,7 @@ defmodule Pharkdown.Parser do
     # IO.inspect(string, label: "\nSTRING AU DÉPART")
     # note : toutes ces fonctions retourne +collector+
     collector
+    |> scan_ref_link_references(options)
     |> scan_lines_code_eex(options)
     |> scan_titres_in()
     |> scan_lines_hr(options)
@@ -186,7 +187,10 @@ defmodule Pharkdown.Parser do
     |> scan_for_rest() # tout ce qui reste est considéré comme des paragraphes
     |> reorder_tokens() # on met les tokens dans l'ordre (cf. N000)
     # |> IO.inspect(label: "\nAprès réagencement des tokens")
-    |> (fn coll -> coll.tokens end).()
+    # |> (fn collector -> 
+    #   [collector.tokens, collector.options]
+
+    # end).()
     # collector.tokens contient maintenant la liste ordonnée de tous
     # les tokens qui constituent le texte. On n'a plus besoin du reste.
     # Note : À réfléchir, peut-être qu'à l'avenir il faudrait garder
@@ -316,15 +320,57 @@ defmodule Pharkdown.Parser do
   end
 
   @doc """
+  ## Description
+
+  Récupère dans le texte les liens référencés pour les mettre dans 
+  options[:ref_links] comme une Map.
+
+  ## Examples
+
+    iex> Parser.scan_ref_link_references(%{texte: "[1]: vers/lien", options: []}, [])
+    %{texte: "", options: [{:ref_links, %{1 => "vers/lien"}}]}
+
+    iex> Parser.scan_ref_link_references(%{texte: "Un paragraphe.\\n[1]: vers/lien\\n[2]: vers/autre/lien", options: []}, [])
+    %{texte: "Un paragraphe.", options: [{:ref_links, %{1 => "vers/lien", 2 => "vers/autre/lien"}}]}
+
+  """
+  @regex_reflink_reference ~r/^\[(.+)\]\: (.+)$/Um
+  def scan_ref_link_references(collector, _options) do
+    if Regex.match?(@regex_reflink_reference, collector.texte) do
+      accu = 
+        Regex.scan(@regex_reflink_reference, collector.texte)
+        |> Enum.reduce(Map.put(collector, :ref_links, %{}), fn found, accu ->
+          [tout, ref, url] = found
+          ref = StringTo.value(ref)
+          new_texte = String.replace(accu.texte, tout, "") |> String.trim()
+          Map.merge(accu, %{
+            texte: new_texte,
+            ref_links: Map.put(accu.ref_links, ref, url)
+          })
+        end)
+      # Les nouvelles options
+      new_options = Keyword.put(collector.options, :ref_links, accu.ref_links)
+      # Le collector actualisé et retourné
+      Map.merge(collector, %{
+        texte:    accu.texte,
+        options:  new_options
+      })
+      # |> IO.inspect(label: "\nCOLLECTOR AVEC REF LIENS")
+    else
+      collector
+    end
+  end
+
+  @doc """
   Capture des lignes de codes entièrement EEx, donc qui commencent
   par <% et qui terminent par %>
 
   ## EXAMPLES
 
-    iex> Pharkdown.Parser.parse("<% 2 + 4 %>")
+    iex> Pharkdown.Parser.parse("<% 2 + 4 %>").tokens
     [ {:eex_line, [content: " 2 + 4 "]} ]
 
-    iex> Pharkdown.Parser.parse("Un paragraphe\\n<% 2 + 4 %>\\nUn autre paragraphe")
+    iex> Pharkdown.Parser.parse("Un paragraphe\\n<% 2 + 4 %>\\nUn autre paragraphe").tokens
     [ 
       {:paragraph, [content: "Un paragraphe"]},
       {:eex_line, [content: " 2 + 4 "]},
@@ -350,19 +396,19 @@ defmodule Pharkdown.Parser do
 
   ## Examples
 
-    iex> Pharkdown.Parser.tokenize("# Un titre")
+    iex> Pharkdown.Parser.tokenize("# Un titre").tokens
     [{:title, [content: "Un titre", level: 1]}]
 
-    iex> Pharkdown.Parser.tokenize("### Un titre de niveau 3")
+    iex> Pharkdown.Parser.tokenize("### Un titre de niveau 3").tokens
     [{:title, [content: "Un titre de niveau 3", level: 3]}]
 
-    iex> Pharkdown.Parser.tokenize("####### Un titre de niveau 7")
+    iex> Pharkdown.Parser.tokenize("####### Un titre de niveau 7").tokens
     [{:title, [content: "Un titre de niveau 7", level: 7]}]
 
-    iex> Pharkdown.Parser.tokenize("######## Mauvais titre de niveau 8")
+    iex> Pharkdown.Parser.tokenize("######## Mauvais titre de niveau 8").tokens
     [{:paragraph, [content: "######## Mauvais titre de niveau 8"]}]
 
-    iex> Pharkdown.Parser.tokenize("# Un grand titre\\n## Un sous-titre")
+    iex> Pharkdown.Parser.tokenize("# Un grand titre\\n## Un sous-titre").tokens
     [
       {:title, [content: "Un grand titre", level: 1]},
       {:title, [content: "Un sous-titre", level: 2]},
@@ -458,23 +504,23 @@ defmodule Pharkdown.Parser do
 
   ## Examples
 
-    iex> Pharkdown.Parser.parse("---")
+    iex> Pharkdown.Parser.parse("---").tokens
     [ {:line_hr, [params: nil]} ]
 
-    iex> Pharkdown.Parser.parse("***")
+    iex> Pharkdown.Parser.parse("***").tokens
     [ {:line_hr, [params: nil]} ]
 
     // Avec des paramètres
 
-    iex> Pharkdown.Parser.parse("---height:10px---")
+    iex> Pharkdown.Parser.parse("---height:10px---").tokens
     [ {:line_hr, [params: "height:10px"]} ]
 
     // Pas pris en compte dans un texte
 
-    iex> Pharkdown.Parser.parse("Dans un *** texte")
+    iex> Pharkdown.Parser.parse("Dans un *** texte").tokens
     [ {:paragraph, [content: "Dans un *** texte"] } ]
 
-    iex> Pharkdown.Parser.parse("Dans un --- texte")
+    iex> Pharkdown.Parser.parse("Dans un --- texte").tokens
     [ {:paragraph, [content: "Dans un --- texte"] } ]
 
   """
@@ -512,19 +558,19 @@ defmodule Pharkdown.Parser do
   ## Environnements connus
 
     // Bloc de code (comme Markdown)
-    iex> Pharkdown.Parser.parse("~~~\\nDu code\\nEt du code\\n~~~", [])
+    iex> Pharkdown.Parser.parse("~~~\\nDu code\\nEt du code\\n~~~", []).tokens
     [
       {:environment, [type: :blockcode, language: "", content: "Du code\\nEt du code"]}
     ]
 
     // Bloc de code (avec backsticks)
-    iex> Pharkdown.Parser.parse("```\\nDu code\\nEt du code\\n```", [])
+    iex> Pharkdown.Parser.parse("```\\nDu code\\nEt du code\\n```", []).tokens
     [
       {:environment, [type: :blockcode, language: "", content: "Du code\\nEt du code"]}
     ]
 
     // Bloc de code (avec langage)
-    iex> Pharkdown.Parser.parse("```elixir\\nDu code\\nEt du code\\n```", [])
+    iex> Pharkdown.Parser.parse("```elixir\\nDu code\\nEt du code\\n```", []).tokens
     [
       {:environment, [type: :blockcode, language: "elixir", content: "Du code\\nEt du code"]}
     ]
@@ -579,7 +625,7 @@ defmodule Pharkdown.Parser do
 
   # Examples 
 
-    iex> Pharkdown.Parser.parse("~dictionary\\n:Un terme\\nUne définition\\ndictionary~", [])
+    iex> Pharkdown.Parser.parse("~dictionary\\n:Un terme\\nUne définition\\ndictionary~", []).tokens
     [
       {:environment, [
         type: :dictionary,
@@ -628,7 +674,7 @@ defmodule Pharkdown.Parser do
 
   ## Examples
 
-    iex> Pharkdown.Parser.parse("~document\\nUne ligne de document\\nUne autre ligne\\ndocument~", [])
+    iex> Pharkdown.Parser.parse("~document\\nUne ligne de document\\nUne autre ligne\\ndocument~", []).tokens
     [
       {:environment, [type: :document, content: [
         [type: :paragraph, content: "Une ligne de document"], 

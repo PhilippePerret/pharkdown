@@ -148,9 +148,30 @@ defmodule Pharkdown.Params do
   def class_as_attr(%__MODULE__{class: classes}) do
     ~s( class="#{Enum.join(classes, " ")}")
   end
+
+  @doc """
+  Formate les propriétés CSS dans une balise
+
+  ## Examples
+
+    iex> Params.props_as_style(nil)
+    ""
+    
+    iex> Params.props_as_style(%Params{props: []})
+    ""
+
+    iex> Params.props_as_style(%Params{props: [ ["height", "12px"], ["color", "#CCCCCC"] ]})
+    ~s( style="height:12px;color:#CCCCCC;")
+
+  """
   def props_as_style(nil), do: ""
   def props_as_style(%__MODULE__{props: []}), do: ""
   def props_as_style(%__MODULE__{props: props}) do
-
+    props
+    |> Enum.map(fn [prop, value] -> 
+      "#{prop}:#{value};"
+    end)
+    |> Enum.join("")
+    |> (fn style -> ~s( style="#{style}") end).()
   end
 end

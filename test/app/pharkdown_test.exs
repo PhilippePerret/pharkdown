@@ -84,7 +84,7 @@ defmodule PharkdownTest do
     *Une ligne complètement en italiques*
     Un autre paragraphe.
     """
-    actual = Parser.parse(code)
+    actual = Parser.parse(code).tokens
     expect = [
       {:paragraph, [content: "Un premier paragraphe"]},
       {:paragraph, [content: "*Une ligne complètement en italiques*"]},

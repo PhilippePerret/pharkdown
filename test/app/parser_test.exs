@@ -20,8 +20,8 @@ defmodule Pharkdown.ParserTest do
         ]
       }
     ]
-    assert expect == Parser.tokenize(code)
-    assert expect == Parser.parse(code)
+    assert expect == Parser.tokenize(code).tokens
+    assert expect == Parser.parse(code).tokens
   end
 
   test "Environnement avec clé réduite ('doc' pour 'document')" do
@@ -38,8 +38,8 @@ defmodule Pharkdown.ParserTest do
     ]
       }
     ]
-    assert expect == Parser.tokenize(code)
-    assert expect == Parser.parse(code)
+    assert expect == Parser.tokenize(code).tokens
+    assert expect == Parser.parse(code).tokens
   end
 
   # # C'est celui du doctest
@@ -83,8 +83,8 @@ defmodule Pharkdown.ParserTest do
         [content: "item 3.2", level: 2]
       ]]}
     ]
-    assert expect == Parser.tokenize(code)
-    assert expect == Parser.parse(code)
+    assert expect == Parser.tokenize(code).tokens
+    assert expect == Parser.parse(code).tokens
 
   end
 
@@ -98,8 +98,8 @@ defmodule Pharkdown.ParserTest do
       ]]},
       {:paragraph, [content: "Un paragraphe"]}
     ]
-    assert expect == Parser.tokenize(code)
-    assert expect == Parser.parse(code)
+    assert expect == Parser.tokenize(code).tokens
+    assert expect == Parser.parse(code).tokens
   end
 
   test "Liste numérotée partant d'un grand nombre" do
@@ -111,8 +111,8 @@ defmodule Pharkdown.ParserTest do
       ]]},
       {:paragraph, [content: "Un paragraphe"]}
     ]
-    assert expect == Parser.tokenize(code)
-    assert expect == Parser.parse(code)
+    assert expect == Parser.tokenize(code).tokens
+    assert expect == Parser.parse(code).tokens
   end
 
   test "Liste numérotée commençant à 5" do
@@ -123,8 +123,8 @@ defmodule Pharkdown.ParserTest do
         [content: "Item 2", level: 2]
       ]]}
     ]
-    assert expect == Parser.tokenize(code)
-    assert expect == Parser.parse(code)
+    assert expect == Parser.tokenize(code).tokens
+    assert expect == Parser.parse(code).tokens
   end
 
   test "Liste avec un environnement" do
@@ -153,8 +153,8 @@ defmodule Pharkdown.ParserTest do
         ]
       }
     ]
-    assert expect == Parser.tokenize(code)
-    assert expect == Parser.parse(code)
+    assert expect == Parser.tokenize(code).tokens
+    assert expect == Parser.parse(code).tokens
   end
 
   test "Liste avec environnement et indentation" do
@@ -179,7 +179,7 @@ defmodule Pharkdown.ParserTest do
       }
     ]
     # assert expect == Parser.tokenize(code)
-    assert expect == Parser.parse(code)
+    assert expect == Parser.parse(code).tokens
   end
 
 end

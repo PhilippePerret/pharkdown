@@ -47,6 +47,7 @@ defmodule Pharkdown.Engine do
     |> inspect("After Loader.load_external_contents/2", debugit)
     |> Parser.parse(options)
     |> inspect("After Parser.parse/2", debugit)
+    # |> Formatter.formate(options)
     |> Formatter.formate(options)
     |> inspect("After Formatter.formate/2", debugit)
     |> Formatter.very_last_correction(options)
