@@ -78,7 +78,7 @@ defmodule Pharkdown.Engine do
     File.write!(html_path, code)
   end
 
-  defp full_html(html_code, options \\ []) do
+  defp full_html(html_code, options) do
     """
     <!DOCTYPE html>
     <html>

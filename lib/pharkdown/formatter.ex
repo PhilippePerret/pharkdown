@@ -494,10 +494,14 @@ defmodule Pharkdown.Formatter do
   @regex_insecable_guils ~r/([—–«] )?([—–«] )(.+?)( [—–!?:;»]+)( [—–!?:;»]+)?( [—–!?:;»]+)?/u
   @regex_insecable_tirets ~r/([—–])[  ](.+)[  ]([—–])/Uu
   @regex_insecable_ponct ~r/([^ ]+) ([!?:;]+?)/Uu   ; @rempl_insecable_ponct "<nowrap>\\1&nbsp;\\2</nowrap>"
+  @regex_inner_tag ~r/<(.+)>/U
   def pose_anti_wrappers(string, options \\ []) do
     string
-    # On doit commencer par mettre des espaces insécables là où
-    # ils manquent
+    # On doit commencer par protéger toutes les espaces à l'intérieur
+    # des balises
+    |> string_replace(@regex_inner_tag, &antiwrappers_protect_space_in_tag/2, options)
+    # Ensuite, on peut mettre des espaces insécables là où ils 
+    # manquent
     |> String.replace(@regex_req_insec_before_ponct, @rempl_req_insec_before_poncts)
     |> String.replace(@regex_req_insec_in_cont, @rempl_req_insec_in_cont)
     # Ensuite on traite tous les cas d'insécables imbriqués
@@ -505,12 +509,18 @@ defmodule Pharkdown.Formatter do
     # |> string_replace(@regex_insecable_guils, options)
     |> string_replace(@regex_insecable_tirets, options)
     |> String.replace(@regex_insecable_ponct, @rempl_insecable_ponct)
+    # On remet les espaces à l'intérieur des balises
+    |> String.replace("ESP_PSE", " ")
   end
 
   # Fonction traitant les anti-wrappers sur les strings avec guillemets
   # Elle permet d'utiliser Regex.replace dans un pipe de strings
   defp string_replace(string, regex, callback, _options) do
     Regex.replace(regex, string, callback)
+  end
+
+  defp antiwrappers_protect_space_in_tag(_tout, inner_tag) do
+    String.replace(inner_tag, " ", "ESP_PSE")
   end
 
   defp antiwrappers_guils_et_autres(tout, arg1, arg2, inner_guils, arg3, arg4, arg5) do

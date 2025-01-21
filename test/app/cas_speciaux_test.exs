@@ -36,6 +36,16 @@ defmodule PharkdownCasSpeciauxTests do
       expect = "<div class=\"p\"><nowrap>— « bonjour</nowrap> tout le <nowrap>monde » — !</nowrap></div>" |> T.h()
       assert actual == expect
     end
+  end
 
+  # Un cas très compliqué pour la gestion des anti-wrappers
+  # Idée de solution: pour le traitement des anti-wrappers, on com-
+  # mence par remplacer toutes les espaces à l'intérieur des balises
+  # par des ESP (qui seront donc prises pour du texte)
+  test "une balise avec attribut avant espace insécable" do
+    code = "path(mon/lien) :\nC'est un beau lien."
+    actual = Engine.compile_string(code)
+    expect = ~s(<div class="p"><nowrap><code class="path">mon/lien</code>&nbsp;:</nowrap></div><div class="p">C’est un beau lien.</div>)
+    assert actual == expect
   end
 end

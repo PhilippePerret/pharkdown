@@ -28,7 +28,10 @@ defmodule Pharkdown.PharkdownHelpers do
     ~s(<span style="color:#{color};">#{string}</span>)
   end
 
-
+  def path(string) do
+    ~s(<code class="path">#{string}</code>)
+  end
+  def p(string), do: path(string)
 
 
   def __liste_fonctions() do
