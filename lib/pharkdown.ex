@@ -113,7 +113,7 @@ defmodule Pharkdown do
   end
 
   defmacro __using__(options) do
-    IO.puts "-> Pharkdown.__using__"
+    # IO.puts "-> Pharkdown.__using__"
     path_folder_html = String.replace(__CALLER__.file, ~r/_controller\.ex$/, "_html")
   
     quote bind_quoted: [options: options, path_folder_html: path_folder_html] do

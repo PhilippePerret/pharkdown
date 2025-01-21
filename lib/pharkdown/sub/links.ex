@@ -6,14 +6,51 @@ defmodule Pharkdown.Link do
     anchor: nil,
     title: nil,
     vroute: false, # route vérifiée
-    attributes: nil
+    params: nil,   # Ou une structure Pharkdown.Params
   ]
+
+  alias Pharkdown.Params
 
   @doc """
   ## Traite tous les liens dans le texte +string+
   """
+  def treate_links_in(string, options \\ []) when is_binary(string) do
+    string
+    |> treat_href_links_in(options) 
+    |> treat_ref_links_in(options) 
+  end
+  
+  @doc """
+  Traitement des liens référencés [title][x]
+
+  ## Examples
+
+    iex> Link.treat_ref_links_in("bonjour", [])
+    "bonjour"
+
+    iex> Link.treat_ref_links_in("[Titre][12]", [{:ref_links, %{12 => "mon/lien"}}])
+    ~s(<a href="mon/lien">Titre</a>)
+
+    iex> Link.treat_ref_links_in("[Titre][12|.orange]", [{:ref_links, %{12 => "un/lieu"}}])
+    ~s(<a href="un/lieu" class="orange">Titre</a>)
+  """
+  @regex_reflinks ~r/\[(?<title>.+)\]\[(?<ref>.+)(?:\|(?<params>.+))?\]/U
+  def treat_ref_links_in(string, options) do
+    if Regex.match?(@regex_reflinks, string) do
+      options[:ref_links] || (
+        raise "Aucun lien référencé dans le document. Je ne peux pas traiter les liens référencés."
+      )
+      Regex.replace(@regex_reflinks, string, fn _, title, ref, params ->
+        href = options[:ref_links][String.to_integer(ref)]
+        treate(title, href, params)  
+      end)
+    else
+      string
+    end
+  end
+  
   @regex_links ~r/\[(?<title>.+)\]\((?<href>.+)(?:\|(?<params>.+))?\)/U
-  def treate_links_in(string) when is_binary(string) do
+  def treat_href_links_in(string, _options) do
     Regex.replace(@regex_links, string, fn _, title, href, params ->
       treate(title, href, params)
     end)
@@ -36,16 +73,16 @@ defmodule Pharkdown.Link do
   ## Examples
 
     iex> Link.parse("Titre", "mon/url", nil)
-    %Link{title: "Titre", href: "mon/url", url: "mon/url", anchor: nil, query_string: nil, attributes: nil, vroute: false}
+    %Link{title: "Titre", href: "mon/url", url: "mon/url", anchor: nil, query_string: nil, params: nil, vroute: false}
 
     iex> Link.parse("Titre", "mon/url#ancre", nil)
-    %Link{title: "Titre", href: "mon/url#ancre", url: "mon/url", anchor: "ancre", query_string: nil, attributes: nil, vroute: false}
+    %Link{title: "Titre", href: "mon/url#ancre", url: "mon/url", anchor: "ancre", query_string: nil, params: nil, vroute: false}
 
     iex> Link.parse("Titre", "mon/url?pararm=valeur", nil)
-    %Link{title: "Titre", href: "mon/url?pararm=valeur", url: "mon/url", anchor: nil, query_string: "pararm=valeur", attributes: nil, vroute: false}
+    %Link{title: "Titre", href: "mon/url?pararm=valeur", url: "mon/url", anchor: nil, query_string: "pararm=valeur", params: nil, vroute: false}
 
     iex> Link.parse("Titre", "mon/url?pararm=valeur#ancre", nil)
-    %Link{title: "Titre", href: "mon/url?pararm=valeur#ancre", url: "mon/url", anchor: "ancre", query_string: "pararm=valeur", attributes: nil, vroute: false}
+    %Link{title: "Titre", href: "mon/url?pararm=valeur#ancre", url: "mon/url", anchor: "ancre", query_string: "pararm=valeur", params: nil, vroute: false}
 
   """
   @regex_href ~r/^(?<u>.+)(\?(?<qs>.+))?(?:\#(?<a>.+))?$/U
@@ -71,19 +108,8 @@ defmodule Pharkdown.Link do
       vroute: is_verified_route,
       query_string: SafeString.nil_if_empty(query_string),
       anchor: SafeString.nil_if_empty(anchor),
-      attributes: parse_params(params)
+      params: Params.parse(params)
     }
-  end
-
-  def parse_params(nil), do: nil
-  def parse_params(""), do: nil
-  def parse_params(params) do
-    params
-    |> String.split(",") 
-    |> Enum.map(fn i -> String.trim(i) end)
-    |> Enum.map(fn i -> String.split(i, "=") end)
-    |> Enum.map(fn [attr, val] -> ~s(#{attr}="#{val}") end)
-    |> (fn liste -> " " <> Enum.join(liste, " ") end).()
   end
 
   @doc """
@@ -122,7 +148,11 @@ defmodule Pharkdown.Link do
   def formate(%__MODULE__{} = plink) do
     target = target_for(plink.href)
     href   = href_for(plink)
-    "<a href=#{href}#{plink.attributes}#{target}>#{plink.title}</a>"
+    id    = Params.id_as_attr(plink.params)
+    attrs = Params.attrs_as_attr(plink.params)
+    class = Params.class_as_attr(plink.params)
+    style = Params.props_as_style(plink.params)
+    "<a #{id}href=#{href}#{attrs}#{class}#{style}#{target}>#{plink.title}</a>"
   end
 
   defp target_for(href) do

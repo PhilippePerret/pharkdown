@@ -12,9 +12,5 @@ defmodule EssaiUseWeb.PageController do
       texte_dynamique: "Ce texte est généré <dynamiquement> à l'aide de \\<code><%= ... %>\\</code>" |> T.h(:less_than)
     })
   end
-
-  def essai(_conn, _params) do
-    IO.puts "Je passe par l'essai"
-  end
   
 end

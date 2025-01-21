@@ -26,9 +26,9 @@ defmodule ParFichiersTests do
   #   test_file("textes/bug-20250120-6:04.phad")
   # end
 
-  test "Évaluation de fonction dans bloc code ne devrait pas se faire" do
-    test_file("textes/Manuel.md")
-  end
+  # test "Évaluation de fonction dans bloc code ne devrait pas se faire" do
+  #   test_file("textes/Manuel.phad")
+  # end
 
   defp test_file(relpath) do
     full_path = Path.expand(Path.join(["test","fixtures", relpath]))

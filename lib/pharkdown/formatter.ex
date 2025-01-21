@@ -622,8 +622,8 @@ defmodule Pharkdown.Formatter do
     ~s(<div class="p"><a href={~p"/explorer/tasker"}>mon lien</a></div>)
 
   """
-  def formate_href_links(string, _options) do
-    Pharkdown.Link.treate_links_in(string)
+  def formate_href_links(string, options) do
+    Pharkdown.Link.treate_links_in(string, options)
   end
 
   @regex_exposants ~r/\^(.+)\b/Uu
